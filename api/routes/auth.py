@@ -252,6 +252,10 @@ def google_auth():
 def logout():
     try:
         jwt = get_jwt()
+        # Importamos TokenManager
+        from helper.token_manager import TokenManager
+        token_manager = TokenManager()
+        
         token_manager.add_to_blacklist(jwt['jti'])
         user_id = jwt.get('sub')
         if user_id:
