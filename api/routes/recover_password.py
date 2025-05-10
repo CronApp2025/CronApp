@@ -42,11 +42,11 @@ def solicitar_recuperacion():
                 (user_id, token, expires_at, created_at) 
                 VALUES (%s, %s, %s, NOW())
                 """
-                cursor.execute(insert_query, (usuario['id'], token, expiration))
+                # Nos aseguramos de que usuario['id'] sea un entero
+                user_id = int(usuario['id']) if isinstance(usuario['id'], str) else usuario['id']
+                cursor.execute(insert_query, (user_id, token, expiration))
                 
-                # Confirmar transacción
-                conn = cursor.connection
-                conn.commit()
+                # No necesitamos hacer commit aquí ya que el contexto get_db_cursor lo maneja
                 
                 # 4. Crear URL para el frontend
                 # Determinar la URL base más confiable
@@ -169,9 +169,8 @@ Equipo CRONAPP
                 )
                 
             except Exception as db_error:
-                # Revertir transacción en caso de error
-                conn = cursor.connection
-                conn.rollback()
+                # No necesitamos hacer rollback explícitamente, 
+                # ya que get_db_cursor lo maneja automáticamente
                 current_app.logger.error(f"Error en DB: {str(db_error)}")
                 raise db_error
                 
@@ -246,16 +245,14 @@ def resetear_password(token):
                 cursor.execute(invalidate_query, (token_data['id'],))
                 current_app.logger.info(f"Token invalidado: {token}")
                 
-                # Confirmar transacción
-                conn = cursor.connection
-                conn.commit()
+                # No necesitamos hacer commit explícitamente,
+                # ya que get_db_cursor lo maneja automáticamente
                 
                 return success_response("Contraseña actualizada exitosamente")
                 
             except Exception as db_error:
-                # Revertir en caso de error
-                conn = cursor.connection
-                conn.rollback()
+                # No necesitamos hacer rollback explícitamente,
+                # ya que get_db_cursor lo maneja automáticamente
                 current_app.logger.error(f"Error en DB: {str(db_error)}")
                 raise db_error
                 
