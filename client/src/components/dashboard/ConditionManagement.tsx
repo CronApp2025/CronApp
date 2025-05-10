@@ -1,191 +1,411 @@
-import { useState } from 'react';
-import { Activity, Calendar, MoreHorizontal, Plus, Search, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CONDITIONS, MOCK_PATIENTS } from '@/lib/constants';
-import { formatDateString } from '@/lib/utils';
-import { Condition } from '@/lib/types';
+import React, { useState, useEffect } from "react";
+import { ChevronDown, FileText, Eye, Heart, Microscope, Activity, AlertTriangle, Search, Filter, UserPlus, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { CONDITIONS } from "@/lib/constants";
+import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { Condition, Metric } from "@shared/schema";
+import { formatDateString } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useConditions } from "@/hooks/use-patient";
 
-export function ConditionManagement() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<string | null>(null);
-  const activePatient = MOCK_PATIENTS[0];
+// Componente para mostrar una métrica de condición
+const ConditionMetric = ({ metric }: { metric: any }) => {
+  const ValueIcon = metric.icon === 'microscope' ? Microscope : 
+                  metric.icon === 'heart' ? Heart : Activity;
   
-  // Filtramos condiciones por búsqueda y categoría
-  const filteredConditions = CONDITIONS.filter(condition => {
-    const matchesSearch = searchTerm.trim() === '' || 
-      condition.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === null || condition.category === filter;
-    // Solo mostrar condiciones del paciente activo
-    const belongsToPatient = activePatient.conditions.some(c => c.id === condition.id);
-    
-    return matchesSearch && matchesFilter && belongsToPatient;
-  });
-  
-  // Extraemos categorías únicas
-  const categories = Array.from(new Set(CONDITIONS.map(c => c.category)));
-  
-  // Función para obtener color de severidad
-  const getSeverityColor = (severity: number) => {
-    if (severity >= 8) return 'bg-red-500';
-    if (severity >= 5) return 'bg-amber-500';
-    return 'bg-emerald-500';
+  const getTextColorClass = (color: string | undefined) => {
+    if (!color) return "text-neutral-800";
+    if (color === "warning") return "text-[#ff9800]";
+    if (color === "danger") return "text-[#f44336]";
+    return "text-primary";
   };
   
-  // Función para obtener texto de severidad
-  const getSeverityText = (severity: number) => {
-    if (severity >= 8) return 'Alta';
-    if (severity >= 5) return 'Media';
-    return 'Baja';
-  };
-
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-neutral-800">Gestión de Condiciones</h2>
-        <div className="mt-3 md:mt-0">
-          <Button className="bg-primary hover:bg-primary-600 text-white">
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Condición
-          </Button>
+    <div className="bg-neutral-50 rounded-md p-4 hover:shadow-sm transition-all duration-200">
+      <div className="flex items-center mb-2">
+        <ValueIcon className={`h-4 w-4 ${metric.icon === 'heart' ? 'text-[#f44336]' : 'text-primary'} mr-2`} />
+        <h4 className="text-sm font-semibold text-neutral-700">{metric.name}</h4>
+      </div>
+      <div className="mb-2">
+        <div className="flex justify-between text-sm mb-1">
+          <span className="text-neutral-600">{metric.label}</span>
+        </div>
+        <div>
+          {metric.valueLabel && (
+            <span className="text-sm text-neutral-600">{metric.valueLabel}</span>
+          )}
+          <span className={`text-lg font-semibold ${getTextColorClass(metric.valueColor)} font-mono ml-2`}>
+            {metric.value}
+          </span>
         </div>
       </div>
-      
-      {/* Barra de búsqueda y filtros */}
-      <div className="mb-6">
-        <div className="relative mb-4">
-          <Input 
-            type="text" 
-            placeholder="Buscar condiciones..." 
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" />
-          {searchTerm && (
-            <button 
-              className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600"
-              onClick={() => setSearchTerm('')}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
+    </div>
+  );
+};
+
+// Componente para una tarjeta de condición
+const ConditionCard = ({ condition, onOpenDetails }: { condition: any, onOpenDetails: (condition: any) => void }) => {
+  const ConditionIcon = condition.icon === 'heart' ? Heart : Activity;
+  const colorClass = condition.color === 'red' ? '[#f44336]' : 'primary';
+  const bgColorClass = condition.color === 'red' ? 'red-100' : 'blue-100';
+  const borderColorClass = condition.color === 'red' ? '[#f44336]' : 'primary';
+  
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }} 
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`border-b border-neutral-100 p-6`}
+    >
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex items-start">
+          <div className={`w-10 h-10 bg-${bgColorClass} text-${colorClass} rounded-md flex items-center justify-center mr-4 flex-shrink-0`}>
+            <ConditionIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-800 mb-1">{condition.name}</h3>
+            <p className="text-sm text-neutral-500">{condition.type}</p>
+          </div>
         </div>
         
-        {/* Filtros de categoría */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant={filter === null ? "default" : "outline"}
-            className={`h-8 ${filter === null ? 'bg-primary text-white' : 'text-neutral-600'}`}
-            onClick={() => setFilter(null)}
-          >
-            Todas
-          </Button>
-          
-          {categories.map(category => (
-            <Button
-              key={category}
-              size="sm"
-              variant={filter === category ? "default" : "outline"}
-              className={`h-8 ${filter === category ? 'bg-primary text-white' : 'text-neutral-600'}`}
-              onClick={() => setFilter(category)}
-            >
-              {category}
-            </Button>
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {condition.metrics && condition.metrics.map((metric: any, index: number) => (
+            <ConditionMetric key={index} metric={metric} />
           ))}
         </div>
       </div>
       
-      {/* Lista de condiciones */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-left border-b border-neutral-200">
-              <th className="pb-2 text-sm font-medium text-neutral-500">Condición</th>
-              <th className="pb-2 text-sm font-medium text-neutral-500">Categoría</th>
-              <th className="pb-2 text-sm font-medium text-neutral-500">Severidad</th>
-              <th className="pb-2 text-sm font-medium text-neutral-500">Actualizado</th>
-              <th className="pb-2 text-sm font-medium text-neutral-500">Estado</th>
-              <th className="pb-2 text-sm font-medium text-neutral-500"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredConditions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-4 text-center text-neutral-500">
-                  No se encontraron condiciones que coincidan con la búsqueda
-                </td>
-              </tr>
-            ) : (
-              filteredConditions.map((condition: Condition) => (
-                <tr key={condition.id} className="border-b border-neutral-100 hover:bg-neutral-50">
-                  <td className="py-4">
-                    <div className="flex items-center">
-                      <span className="w-8 h-8 rounded-full bg-neutral-100 text-primary flex items-center justify-center mr-3 text-lg">
-                        {condition.icon}
-                      </span>
-                      <span className="font-medium text-neutral-800">{condition.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-4">
-                    <span className="text-sm text-neutral-600">{condition.category}</span>
-                  </td>
-                  <td className="py-4">
-                    <div className="flex items-center">
-                      <span 
-                        className={`w-2 h-2 rounded-full mr-2 ${getSeverityColor(condition.severity)}`}
-                      />
-                      <span className="text-sm text-neutral-600">
-                        {getSeverityText(condition.severity)}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-4">
-                    <div className="flex items-center text-sm text-neutral-500">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {formatDateString(condition.lastUpdated)}
-                    </div>
-                  </td>
-                  <td className="py-4">
-                    <div className="flex items-center">
-                      <span 
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          condition.status === 'Activo' ? 'bg-emerald-100 text-emerald-700' : 
-                          condition.status === 'En tratamiento' ? 'bg-blue-100 text-blue-700' : 
-                          'bg-neutral-100 text-neutral-700'
-                        }`}
-                      >
-                        {condition.status}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-4 text-right">
-                    <Button variant="ghost" size="sm" className="h-8 p-0">
-                      <MoreHorizontal className="h-4 w-4 text-neutral-500" />
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="flex flex-col sm:flex-row justify-end mt-4 gap-2">
+        <Button 
+          variant="outline" 
+          className={`px-4 py-2 border border-${borderColorClass} text-${colorClass} rounded-md flex items-center justify-center hover:bg-${condition.color === 'red' ? '[#ffebee]' : 'primary-50'}`}
+          onClick={() => onOpenDetails(condition)}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          <span>Ver Detalles Clínicos</span>
+          <ChevronDown className="h-4 w-4 ml-2" />
+        </Button>
+        
+        <Button 
+          variant="secondary" 
+          className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-md flex items-center justify-center hover:bg-neutral-200"
+          onClick={() => {
+            toast({
+              title: "Guías de Tratamiento",
+              description: `Guías para ${condition.name} descargadas correctamente.`,
+            });
+          }}
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          <span>Guías de Tratamiento</span>
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
+
+// Componente de detalles de condición
+const ConditionDetails = ({ condition, onClose }: { condition: any, onClose: () => void }) => {
+  const ConditionIcon = condition.icon === 'heart' ? Heart : Activity;
+  const colorClass = condition.color === 'red' ? '[#f44336]' : 'primary';
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center">
+        <div className={`w-10 h-10 bg-${condition.color === 'red' ? 'red' : 'blue'}-100 text-${colorClass} rounded-md flex items-center justify-center mr-4`}>
+          <ConditionIcon className="h-5 w-5" />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-neutral-800">{condition.name}</h3>
+          <p className="text-sm text-neutral-500">{condition.type}</p>
+        </div>
       </div>
       
-      {/* Información de tratamiento */}
-      <div className="mt-6 pt-4 border-t border-neutral-100">
-        <div className="flex flex-col md:flex-row md:items-center justify-between">
-          <h3 className="font-medium text-neutral-800">Plan de Tratamiento Global</h3>
-          <div className="flex items-center text-sm text-neutral-500 mt-2 md:mt-0">
-            <Activity className="h-4 w-4 mr-1" />
-            Adherencia al tratamiento: <span className="font-medium text-emerald-600 ml-1">87%</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
+        {condition.metrics && condition.metrics.map((metric: any, index: number) => (
+          <div key={index} className="bg-neutral-50 p-4 rounded-md">
+            <h4 className="font-semibold text-neutral-700 mb-2">{metric.name}</h4>
+            <p className="text-sm text-neutral-600 mb-1">{metric.label}</p>
+            <p className="text-lg font-semibold">{metric.value}</p>
+            <p className="text-xs text-neutral-500 mt-2">
+              Actualizado: {formatDateString(new Date().toISOString())}
+            </p>
+          </div>
+        ))}
+      </div>
+      
+      <div className="bg-neutral-50 p-4 rounded-md mt-4">
+        <h4 className="font-semibold text-neutral-700 mb-2">Recomendaciones de Tratamiento</h4>
+        <ul className="list-disc list-inside text-sm text-neutral-600 space-y-2">
+          <li>Seguimiento cada 3 meses con especialista</li>
+          <li>Control diario de niveles según recomendaciones</li>
+          <li>Evaluación de medicación actual</li>
+          <li>Plan nutricional especializado</li>
+        </ul>
+      </div>
+      
+      <div className="flex justify-end gap-2 mt-4">
+        <Button 
+          onClick={onClose} 
+          variant="outline"
+        >
+          Cerrar
+        </Button>
+        <Button>Actualizar Tratamiento</Button>
+      </div>
+    </div>
+  );
+};
+
+// Componente para añadir nueva condición
+const AddConditionForm = ({ onClose }: { onClose: () => void }) => {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <label className="text-sm font-medium text-neutral-700 mb-1 block">
+            Nombre de la Condición
+          </label>
+          <Input placeholder="Ej. Diabetes Tipo 2" />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-neutral-700 mb-1 block">
+            Tipo de Condición
+          </label>
+          <Input placeholder="Ej. Gestión Clínica" />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-neutral-700 mb-1 block">
+            Nivel de Severidad
+          </label>
+          <Input placeholder="Ej. Moderado" />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-neutral-700 mb-1 block">
+            Notas del Tratamiento
+          </label>
+          <Input placeholder="Notas importantes sobre el tratamiento..." />
+        </div>
+      </div>
+      
+      <div className="flex justify-end gap-2 mt-6">
+        <Button 
+          onClick={onClose} 
+          variant="outline"
+        >
+          Cancelar
+        </Button>
+        <Button onClick={() => {
+          toast({
+            title: "Condición Añadida",
+            description: "La nueva condición se ha añadido correctamente.",
+          });
+          onClose();
+        }}>
+          Guardar Condición
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export function ConditionManagement() {
+  const isMobile = useIsMobile();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredConditions, setFilteredConditions] = useState<any[]>([]);
+  const [selectedCondition, setSelectedCondition] = useState<any>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isAddConditionOpen, setIsAddConditionOpen] = useState(false);
+  
+  // Obtener las condiciones desde el hook
+  const { data: conditions = [] } = useConditions();
+  
+  // Inicializar las condiciones filtradas cuando se cargan las condiciones
+  useEffect(() => {
+    setFilteredConditions(CONDITIONS);
+  }, []);
+  
+  // Filtra las condiciones según el término de búsqueda
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredConditions(CONDITIONS);
+    } else {
+      const lowercasedSearch = searchTerm.toLowerCase();
+      const filtered = CONDITIONS.filter((condition) => 
+        condition.name.toLowerCase().includes(lowercasedSearch) || 
+        condition.type.toLowerCase().includes(lowercasedSearch)
+      );
+      setFilteredConditions(filtered);
+    }
+  }, [searchTerm]);
+  
+  // Manejador para abrir los detalles de una condición
+  const handleOpenDetails = (condition: any) => {
+    setSelectedCondition(condition);
+    setIsDetailsOpen(true);
+  };
+  
+  // Componente para el diálogo de detalles (responsivo)
+  const DetailsDialog = () => {
+    if (isMobile) {
+      return (
+        <Drawer open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Detalles de la Condición</DrawerTitle>
+              <DrawerDescription>Información detallada y tratamiento recomendado</DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4">
+              {selectedCondition && (
+                <ConditionDetails 
+                  condition={selectedCondition} 
+                  onClose={() => setIsDetailsOpen(false)} 
+                />
+              )}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+    
+    return (
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Detalles de la Condición</DialogTitle>
+            <DialogDescription>Información detallada y tratamiento recomendado</DialogDescription>
+          </DialogHeader>
+          {selectedCondition && (
+            <ConditionDetails 
+              condition={selectedCondition} 
+              onClose={() => setIsDetailsOpen(false)} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  // Componente para el diálogo de añadir condición (responsivo)
+  const AddConditionDialog = () => {
+    if (isMobile) {
+      return (
+        <Drawer open={isAddConditionOpen} onOpenChange={setIsAddConditionOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Añadir Nueva Condición</DrawerTitle>
+              <DrawerDescription>Ingrese los detalles de la nueva condición médica</DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4">
+              <AddConditionForm onClose={() => setIsAddConditionOpen(false)} />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+    
+    return (
+      <Dialog open={isAddConditionOpen} onOpenChange={setIsAddConditionOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Añadir Nueva Condición</DialogTitle>
+            <DialogDescription>Ingrese los detalles de la nueva condición médica</DialogDescription>
+          </DialogHeader>
+          <AddConditionForm onClose={() => setIsAddConditionOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  return (
+    <div className="bg-white rounded-lg shadow-sm mb-6">
+      <div className="p-6 border-b border-neutral-100">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-800 mb-1">Gestión de Condiciones</h2>
+            <p className="text-sm text-neutral-500">Administre condiciones médicas y tratamientos</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Buscar condiciones..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 py-2 text-sm"
+              />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
+            </div>
+            
+            <Button 
+              variant="outline"
+              className="flex items-center px-3"
+            >
+              <Filter className="h-4 w-4 mr-1" />
+              <span>Filtrar</span>
+            </Button>
+            
+            <Button 
+              className="flex items-center px-3 whitespace-nowrap"
+              onClick={() => setIsAddConditionOpen(true)}
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              <span>Nueva Condición</span>
+            </Button>
           </div>
         </div>
-        <p className="text-sm text-neutral-600 mt-2">
-          El paciente presenta múltiples condiciones que requieren un enfoque coordinado. 
-          Se recomienda seguimiento semanal para ajustar medicación y verificar progreso.
-        </p>
+        
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 rounded-full text-xs">
+            Activas <span className="font-semibold">{filteredConditions.length}</span>
+          </Badge>
+          <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 rounded-full text-xs">
+            Monitoreo Continuo <span className="font-semibold">2</span>
+          </Badge>
+          <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 rounded-full text-xs">
+            <Settings className="h-3 w-3 mr-1" />
+            <span>Configurar Vista</span>
+          </Badge>
+        </div>
       </div>
+      
+      <div>
+        {filteredConditions.length === 0 ? (
+          <div className="p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-neutral-700 mb-1">No se encontraron condiciones</h3>
+            <p className="text-sm text-neutral-500 mb-4">No hay condiciones que coincidan con tu búsqueda.</p>
+            <Button 
+              variant="outline" 
+              onClick={() => setSearchTerm("")}
+              className="mx-auto"
+            >
+              Mostrar Todas
+            </Button>
+          </div>
+        ) : (
+          <>
+            {filteredConditions.map((condition, index) => (
+              <ConditionCard 
+                key={index} 
+                condition={condition} 
+                onOpenDetails={handleOpenDetails} 
+              />
+            ))}
+          </>
+        )}
+      </div>
+      
+      <DetailsDialog />
+      <AddConditionDialog />
     </div>
   );
 }
