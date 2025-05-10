@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 
 console.log('[express] Iniciando exclusivamente la API Flask...');
-console.log('[express] La API Flask debería estar corriendo en http://localhost:5000');
+console.log('[express] La API Flask debería estar corriendo en http://localhost:5002');
 console.log('[express] El servidor Express ha sido desactivado, solo se usa la API Flask.');
 
 // Inicia el servidor Flask

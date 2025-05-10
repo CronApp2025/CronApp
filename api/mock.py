@@ -325,7 +325,7 @@ def request_password_recovery():
             # Continuamos de todas formas
         
         # Crear URL para el frontend
-        frontend_base_url = request.headers.get('Origin', 'http://localhost:5000')
+        frontend_base_url = request.headers.get('Origin', 'http://localhost:5002')
         reset_url = f"{frontend_base_url}/reset-password/{token}"
         
         # En un caso real, aquí enviaríamos un email con el enlace

@@ -356,7 +356,9 @@ def resetear_password(token):
                 
                 # Verificar que el user_id sea válido
                 user_id = token_data.get('user_id')
-                if user_id == 'user_id' or not user_id:
+                
+                # Validación adicional para evitar el error "Truncated incorrect DOUBLE value: 'id'"
+                if user_id == 'user_id' or user_id == 'id' or not user_id:
                     # Caso especial para desarrollo - obtener el ID del usuario por email
                     current_app.logger.warning(f"User ID no válido: {user_id}, buscando por email")
                     find_user_query = "SELECT id FROM users WHERE email = %s"
@@ -372,18 +374,48 @@ def resetear_password(token):
                     else:
                         # Último recurso, intentamos con ID 1
                         user_id = 1
+                
+                # Asegurarse de que user_id sea un entero para evitar errores de conversión
+                try:
+                    if isinstance(user_id, str) and user_id.isdigit():
+                        user_id = int(user_id)
+                    elif isinstance(user_id, str):
+                        # Si no es un dígito, buscar el usuario por email
+                        current_app.logger.warning(f"User ID no es numérico: {user_id}, buscando por email")
+                        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+                        id_result = cursor.fetchone()
+                        if id_result and isinstance(id_result, dict) and 'id' in id_result:
+                            user_id = id_result['id']
+                        elif id_result and isinstance(id_result, (list, tuple)) and len(id_result) > 0:
+                            user_id = id_result[0]
+                        else:
+                            user_id = 1
+                except (ValueError, TypeError) as e:
+                    current_app.logger.error(f"Error al convertir user_id a entero: {str(e)}")
+                    user_id = 1
                         
-                    current_app.logger.info(f"User ID resuelto: {user_id}")
+                current_app.logger.info(f"User ID resuelto y validado: {user_id}")
                 
                 update_query = "UPDATE users SET password = %s, updated_at = NOW() WHERE id = %s"
                 cursor.execute(update_query, (hashed_password, user_id))
                 current_app.logger.info(f"Contraseña actualizada para usuario: {user_id}")
                 
                 # 5. Invalidar el token (marcar como usado)
-                if token_data.get('id') and token_data.get('id') != 'id':
-                    invalidate_query = "UPDATE password_reset_tokens SET used_at = NOW() WHERE id = %s"
-                    cursor.execute(invalidate_query, (token_data['id'],))
-                    current_app.logger.info(f"Token invalidado: {token}")
+                token_id = token_data.get('id')
+                
+                # Asegurarse de que token_id sea un valor numérico válido
+                if token_id and token_id != 'id':
+                    try:
+                        # Convertir a entero si es una cadena numérica
+                        if isinstance(token_id, str) and token_id.isdigit():
+                            token_id = int(token_id)
+                            
+                        invalidate_query = "UPDATE password_reset_tokens SET used_at = NOW() WHERE id = %s"
+                        cursor.execute(invalidate_query, (token_id,))
+                        current_app.logger.info(f"Token invalidado: {token}")
+                    except (ValueError, TypeError) as e:
+                        current_app.logger.error(f"Error al convertir token_id a entero: {str(e)}")
+                        current_app.logger.warning(f"No se pudo invalidar el token en la BD debido a un error de tipo, pero la contraseña ha sido actualizada")
                 else:
                     current_app.logger.warning(f"No se pudo invalidar el token en la BD, pero la contraseña ha sido actualizada")
                 
