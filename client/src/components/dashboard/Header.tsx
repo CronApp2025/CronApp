@@ -9,9 +9,11 @@ import { useAuth } from "@/hooks/use-auth";
 
 interface HeaderProps {
   activePath: string;
+  toggleSidebar?: () => void;
+  sidebarOpen?: boolean;
 }
 
-export function Header({ activePath }: HeaderProps) {
+export function Header({ activePath, toggleSidebar, sidebarOpen }: HeaderProps) {
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();

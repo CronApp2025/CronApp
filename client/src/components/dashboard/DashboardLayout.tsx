@@ -7,10 +7,10 @@ import { useState } from 'react';
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  activePath: string;
+  activePath?: string;
 }
 
-export function DashboardLayout({ children, activePath }: DashboardLayoutProps) {
+export function DashboardLayout({ children, activePath = '/dashboard' }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   
