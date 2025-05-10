@@ -24,7 +24,7 @@ localPort = 5002
 externalPort = 3001
 
 [workflows]
-runButton = "Start App"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Start App"
@@ -64,4 +64,3 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd client && npm run dev"
-waitForPort = 5001
