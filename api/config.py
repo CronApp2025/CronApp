@@ -7,9 +7,9 @@ load_dotenv()
 
 # Database configuration
 DB_CONFIG = {
-    'host': 'sql.freedb.tech',
-    'user': 'cronapp_2025_user',
-    'password': 'Z3w9iM90tDo3e7n68mROCLAJBWmbsnZB',  # Using the password from text.txt
+    'host': '0.0.0.0',
+    'user': 'root',
+    'password': '',
     'database': 'cronapp_2025',
     'port': 3306
 }
