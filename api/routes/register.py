@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 from helper.validations import validate_email_format
 from helper.database import get_db_cursor
 from helper.response_utils import success_response, error_response
+from helper.transaction import db_transaction
 
 register = Blueprint('register', __name__)
 
@@ -31,44 +32,50 @@ def register_usuario():
         hashed_password = generate_password_hash(data['password'])
 
         with get_db_cursor(dictionary=True) as cursor:
-            # Verificar si el email ya existe
-            cursor.execute("SELECT id FROM users WHERE email = %s", (data['email'],))
-            existing_user = cursor.fetchone()
+            try:
+                # Verificar si el email ya existe
+                cursor.execute("SELECT id FROM users WHERE email = %s", (data['email'],))
+                existing_user = cursor.fetchone()
 
-            if existing_user:
-                return error_response("El email ya está registrado", 400)
+                if existing_user:
+                    return error_response("El email ya está registrado", 400)
 
-            # Insertar el nuevo usuario
-            insert_query = """
-            INSERT INTO users (nombre, apellido, email, password, fecha_nacimiento, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-            """
-            
-            cursor.execute(insert_query, (
-                data['nombre'],
-                data['apellido'],
-                data['email'],
-                hashed_password,
-                data['fecha_nacimiento']
-            ))
-            
-            # Obtener el ID del usuario insertado
-            user_id = cursor.lastrowid
-            
-            # Obtener los datos del usuario creado
-            cursor.execute("""
-                SELECT id, nombre, apellido, email, fecha_nacimiento 
-                FROM users WHERE id = %s
-            """, (user_id,))
-            new_user = cursor.fetchone()
+                # Insertar el nuevo usuario
+                insert_query = """
+                INSERT INTO users (nombre, apellido, email, password, fecha_nacimiento, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
+                """
+                
+                cursor.execute(insert_query, (
+                    data['nombre'],
+                    data['apellido'],
+                    data['email'],
+                    hashed_password,
+                    data['fecha_nacimiento']
+                ))
+                
+                # Obtener el ID del usuario insertado
+                user_id = cursor.lastrowid
+                
+                # Obtener los datos del usuario creado
+                cursor.execute("""
+                    SELECT id, nombre, apellido, email, fecha_nacimiento 
+                    FROM users WHERE id = %s
+                """, (user_id,))
+                new_user = cursor.fetchone()
 
-            if not new_user:
-                raise Exception("Error al crear el usuario")
+                if not new_user:
+                    raise Exception("Error al crear el usuario")
 
-            return success_response(
-                data=new_user,
-                msg="Usuario registrado exitosamente"
-            )
+                return success_response(
+                    data=new_user,
+                    msg="Usuario registrado exitosamente"
+                )
+
+            except Exception as e:
+                if cursor.connection:
+                    cursor.connection.rollback()
+                raise e
 
     except Exception as e:
         print(f"Error en register_usuario: {str(e)}")

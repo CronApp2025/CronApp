@@ -1,3 +1,4 @@
+
 from contextlib import contextmanager
 import mysql.connector
 from api.config import DB_CONFIG
@@ -7,19 +8,20 @@ from mysql.connector import Error
 def get_db_cursor(dictionary=True):
     """Get database cursor with context management"""
     conn = None
+    cursor = None
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor(dictionary=dictionary)
         yield cursor
         conn.commit()
     except Error as e:
-        if conn:
+        if conn and conn.is_connected():
             conn.rollback()
         raise e
     finally:
         if cursor:
             cursor.close()
-        if conn:
+        if conn and conn.is_connected():
             conn.close()
 
 def fetch_one_dict_from_result(result):
