@@ -7,11 +7,11 @@ load_dotenv()
 
 # Database configuration
 DB_CONFIG = {
-    'host': '0.0.0.0',  # Using 0.0.0.0 instead of localhost
-    'user': 'root',
-    'password': '',
+    'host': 'sql.freedb.tech',  # Using the remote MySQL server
+    'user': 'cronapp_2025_user',
+    'password': os.getenv('MYSQL_PASSWORD', ''),
     'database': 'cronapp_2025',
-    'port': 3306  # MySQL default port
+    'port': 3306
 }
 
 # Mail configuration
