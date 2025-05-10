@@ -7,9 +7,9 @@ load_dotenv()
 
 # Database configuration
 DB_CONFIG = {
-    'host': 'sql.freedb.tech',  # Using the remote MySQL server
+    'host': 'sql.freedb.tech',
     'user': 'cronapp_2025_user',
-    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'password': 'Z3w9iM90tDo3e7n68mROCLAJBWmbsnZB',  # Using the password from text.txt
     'database': 'cronapp_2025',
     'port': 3306
 }
