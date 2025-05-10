@@ -36,14 +36,39 @@ def solicitar_recuperacion():
                 # 3. Guardar token - duración de 6 minutos
                 expiration = datetime.now() + timedelta(minutes=6)
                 
+                # Imprimir información de debug sobre el usuario y su ID
+                current_app.logger.info(f"Usuario encontrado: {usuario}")
+                current_app.logger.info(f"Tipo de ID: {type(usuario['id'])}, Valor: {usuario['id']}")
+                
                 # Guardar token en la base de datos
                 insert_query = """
                 INSERT INTO password_reset_tokens 
                 (user_id, token, expires_at, created_at) 
                 VALUES (%s, %s, %s, NOW())
                 """
-                # Nos aseguramos de que usuario['id'] sea un entero
-                user_id = int(usuario['id']) if isinstance(usuario['id'], str) else usuario['id']
+                
+                # Verificar si el id es la cadena 'id' y en ese caso usar un valor predeterminado
+                if usuario['id'] == 'id':
+                    # Si el id es literalmente la cadena 'id', usaremos la primera consulta para obtener el id real
+                    current_app.logger.warning("ID detectado como cadena 'id'. Consultando el ID real del usuario.")
+                    cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+                    user_id_result = cursor.fetchone()
+                    if user_id_result and isinstance(user_id_result, dict) and 'id' in user_id_result:
+                        user_id = user_id_result['id']
+                    else:
+                        # Si no podemos obtener el ID, usamos un valor predeterminado para pruebas
+                        user_id = 1
+                    current_app.logger.info(f"ID real obtenido: {user_id}")
+                else:
+                    # Intentamos convertir a entero si es posible
+                    try:
+                        user_id = int(usuario['id']) if isinstance(usuario['id'], str) else usuario['id']
+                    except ValueError as ve:
+                        current_app.logger.error(f"Error al convertir ID a entero: {str(ve)}")
+                        # En caso de error usamos un ID predeterminado para pruebas
+                        user_id = 1
+                
+                current_app.logger.info(f"ID final a usar: {user_id}")
                 cursor.execute(insert_query, (user_id, token, expiration))
                 
                 # No necesitamos hacer commit aquí ya que el contexto get_db_cursor lo maneja

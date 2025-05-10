@@ -19,25 +19,7 @@ localPort = 5001
 externalPort = 3000
 
 [workflows]
-runButton = "Start App"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-waitForPort = 5000
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Start App"
@@ -47,3 +29,21 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd client && npm run build && cd .. && PYTHONPATH=/home/runner/workspace python api/app.py"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flask API"
+
+[[workflows.workflow]]
+name = "Flask API"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./start-flask-api.sh"
+waitForPort = 5000
