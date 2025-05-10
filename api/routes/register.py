@@ -1,3 +1,4 @@
+
 # routes/register.py
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
@@ -31,10 +32,11 @@ def register_usuario():
         # Hash de la contraseña
         hashed_password = generate_password_hash(data['password'])
 
-        with get_db_cursor(dictionary=True) as cursor, db_transaction(cursor):
+        # Usar with para manejar el cursor y la transacción
+        with get_db_cursor(dictionary=True) as cursor:
             # Verificar si el email ya existe
             cursor.execute("SELECT id FROM users WHERE email = %s", (data['email'],))
-            existing_user = fetch_one_dict_from_result(cursor)
+            existing_user = cursor.fetchone()
 
             if existing_user:
                 return error_response("El email ya está registrado", 400)
@@ -43,7 +45,6 @@ def register_usuario():
             insert_query = """
             INSERT INTO users (nombre, apellido, email, password, fecha_nacimiento, created_at, updated_at)
             VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
-            RETURNING id, nombre, apellido, email, fecha_nacimiento
             """
 
             cursor.execute(insert_query, (
@@ -54,7 +55,12 @@ def register_usuario():
                 data['fecha_nacimiento']
             ))
 
-            new_user = fetch_one_dict_from_result(cursor)
+            # Obtener el ID del usuario insertado
+            user_id = cursor.lastrowid
+
+            # Obtener los datos del usuario creado
+            cursor.execute("SELECT id, nombre, apellido, email, fecha_nacimiento FROM users WHERE id = %s", (user_id,))
+            new_user = cursor.fetchone()
 
             if not new_user:
                 raise Exception("Error al crear el usuario")
