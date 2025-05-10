@@ -1,7 +1,7 @@
 #a
 from contextlib import contextmanager
 import mysql.connector
-from api.config import DB_CONFIG
+from config import DB_CONFIG
 from mysql.connector import Error
 
 @contextmanager

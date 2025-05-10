@@ -7,11 +7,11 @@ load_dotenv()
 
 # Database configuration
 DB_CONFIG = {
-    'host': '0.0.0.0',
-    'user': 'root',
-    'password': '',
-    'database': 'cronapp_2025',
-    'port': 3306
+    'host': os.getenv('MYSQL_HOST', '0.0.0.0'),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'database': os.getenv('MYSQL_DATABASE', 'cronapp_2025'),
+    'port': int(os.getenv('MYSQL_PORT', '3306'))
 }
 
 # Mail configuration
