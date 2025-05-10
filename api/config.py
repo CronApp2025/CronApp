@@ -1,3 +1,4 @@
+
 import os
 from dotenv import load_dotenv
 
@@ -6,11 +7,11 @@ load_dotenv()
 
 # Database configuration
 DB_CONFIG = {
-    'host': os.getenv('PGHOST', 'localhost'),
-    'user': os.getenv('PGUSER', 'root'),
-    'password': os.getenv('PGPASSWORD', ''),
-    'database': os.getenv('PGDATABASE', 'cronapp_2025'),
-    'port': int(os.getenv('PGPORT', 5432))
+    'host': '0.0.0.0',  # Using 0.0.0.0 instead of localhost
+    'user': 'root',
+    'password': '',
+    'database': 'cronapp_2025',
+    'port': 3306  # MySQL default port
 }
 
 # Mail configuration
