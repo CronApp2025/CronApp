@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (token && refreshTokenStr && storedUserData) {
       const userData = JSON.parse(storedUserData);
-
+      
       setState((prev) => ({ 
         ...prev,
         user: userData,
@@ -190,19 +190,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Agregar un retraso y navegar mientras mantenemos isLoading en true
-      setState(prev => ({
-        ...prev,
-        isLoading: true
-      }));
       setTimeout(() => {
         navigate("/dashboard");
+        // Esperar un momento después de la navegación para desactivar la carga
         setTimeout(() => {
           setState(prev => ({
             ...prev,
             isLoading: false
           }));
-        }, 1500);
-      }, 1000);
+        }, 2000);
+      }, 3000);
     },
     onError: (error: Error) => {
       console.error("Error en login con Google:", error);
@@ -253,19 +250,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Agregar un retraso y navegar mientras mantenemos isLoading en true
-      setState(prev => ({
-        ...prev,
-        isLoading: true
-      }));
       setTimeout(() => {
         navigate("/dashboard");
+        // Esperar un momento después de la navegación para desactivar la carga
         setTimeout(() => {
           setState(prev => ({
             ...prev,
             isLoading: false
           }));
-        }, 1500);
-      }, 1000);
+        }, 2000);
+      }, 3000);
     },
     onError: (error: Error) => {
       console.error("Error en login:", error);
@@ -329,7 +323,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Contraseña actualizada",
         description: "Tu contraseña ha sido actualizada exitosamente",
       });
-
+      
       // Dejamos que el componente maneje la navegación
       // para evitar redirecciones automáticas que puedan interrumpir
       // la experiencia del usuario
@@ -391,9 +385,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Actualizar en localStorage
     localStorage.setItem("user_data", JSON.stringify(updatedUser));
-
+    
     console.log("Datos de usuario actualizados:", updatedUser);
-
+    
     // Invalidar cualquier consulta relacionada con el usuario
     queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
   };

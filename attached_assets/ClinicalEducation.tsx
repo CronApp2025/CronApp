@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
   ArrowRight, 
   BookOpen, 
@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
-import { useEducationalResources } from "@/hooks/use-patient";
 
 // Obtener el icono correcto basado en el tipo
 const getIconComponent = (iconName: string) => {
@@ -250,13 +249,10 @@ const ResourceDetails = ({
 
 export function ClinicalEducation() {
   const isMobile = useIsMobile();
-  const [resources, setResources] = useState(EDUCATIONAL_RESOURCES);
+  const [resources] = useState(EDUCATIONAL_RESOURCES);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
-
-  // Obtener recursos educativos desde el hook (cuando sea implementado)
-  const { data: educationalResources = [] } = useEducationalResources();
   
   // Función para manejar el clic en un recurso
   const handleResourceClick = (resource: any) => {
@@ -409,8 +405,11 @@ export function ClinicalEducation() {
         <ArrowRight className="h-4 w-4 ml-2" />
       </Button>
       
+      {/* Diálogos y drawers */}
       <ResourceLibraryDialog />
       <FullCatalogDialog />
     </motion.div>
   );
 }
+
+export default ClinicalEducation;

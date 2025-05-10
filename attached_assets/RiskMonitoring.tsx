@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { 
   Eye, 
   Bell, 
@@ -14,8 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { RISK_ALERTS } from "@/lib/constants";
-import { useAlerts } from "@/hooks/use-patient";
-import { Alert } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { Alert } from "../../shared/schema";
 import { 
   Dialog, 
   DialogContent, 
@@ -67,17 +68,17 @@ const RiskAlertItem = ({
       <div className="flex justify-between items-start mb-2">
         <div>
           <h4 className="font-semibold text-neutral-800">Paciente #{alert.patientId}</h4>
-          <p className="text-xs text-neutral-500">{alert.alertType || alert.description}</p>
+          <p className="text-xs text-neutral-500">{alert.alertType}</p>
         </div>
-        <span className="text-xs bg-primary-50 text-primary px-2 py-1 rounded">{alert.time || "Hoy"}</span>
+        <span className="text-xs bg-primary-50 text-primary px-2 py-1 rounded">{alert.time}</span>
       </div>
       
       <div className="flex items-center justify-between mt-2">
         <div className="text-sm text-neutral-600">Nivel de Riesgo</div>
-        <div className={`text-sm font-semibold ${severityColor.text}`}>{alert.riskLevel || alert.level}%</div>
+        <div className={`text-sm font-semibold ${severityColor.text}`}>{alert.riskLevel}%</div>
       </div>
       <Progress 
-        value={alert.riskLevel || alert.level} 
+        value={alert.riskLevel} 
         className="h-2 bg-neutral-100 mt-1" 
         indicatorClassName={severityColor.indicatorBg} 
       />
@@ -149,8 +150,7 @@ const AlertDetails = ({
   onClose: () => void, 
   onResolve: () => void 
 }) => {
-  const alertType = alert.alertType || alert.description || "Alerta General";
-  const details = riskAlertDetails[alertType as keyof typeof riskAlertDetails] || {
+  const details = riskAlertDetails[alert.alertType as keyof typeof riskAlertDetails] || {
     icon: "alertTriangle",
     interventions: ["Evaluación general requerida"],
     criticalAction: "Contactar al médico responsable"
@@ -167,24 +167,22 @@ const AlertDetails = ({
     return "Bajo";
   };
   
-  const riskLevel = alert.riskLevel || alert.level || 0;
-  const severityLevel = getSeverityLevel(riskLevel);
-  const riskColor = riskLevel >= 90 ? 'danger' : 'warning';
+  const severityLevel = getSeverityLevel(alert.riskLevel);
   
   return (
     <div className="space-y-4">
       <div className="flex items-center">
-        <div className={`w-10 h-10 ${riskColor === 'danger' ? 'bg-red-100 text-[#f44336]' : 'bg-amber-100 text-[#ff9800]'} rounded-md flex items-center justify-center mr-4`}>
+        <div className={`w-10 h-10 ${alert.riskColor === 'danger' ? 'bg-red-100 text-[#f44336]' : 'bg-amber-100 text-[#ff9800]'} rounded-md flex items-center justify-center mr-4`}>
           <IconComponent className="h-5 w-5" />
         </div>
         <div>
           <div className="flex items-center">
-            <h3 className="text-xl font-semibold text-neutral-800 mr-2">{alertType}</h3>
-            <Badge className={`${riskColor === 'danger' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+            <h3 className="text-xl font-semibold text-neutral-800 mr-2">{alert.alertType}</h3>
+            <Badge className={`${alert.riskColor === 'danger' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
               {severityLevel}
             </Badge>
           </div>
-          <p className="text-sm text-neutral-500">Paciente #{alert.patientId} • {alert.time || "Hoy"}</p>
+          <p className="text-sm text-neutral-500">Paciente #{alert.patientId} • {alert.time}</p>
         </div>
       </div>
       
@@ -192,14 +190,14 @@ const AlertDetails = ({
         <h4 className="font-semibold text-neutral-700 mb-2">Nivel de Riesgo</h4>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-neutral-600">Severidad:</span>
-          <span className={`font-semibold ${riskColor === 'danger' ? 'text-[#f44336]' : 'text-[#ff9800]'}`}>
-            {riskLevel}%
+          <span className={`font-semibold ${alert.riskColor === 'danger' ? 'text-[#f44336]' : 'text-[#ff9800]'}`}>
+            {alert.riskLevel}%
           </span>
         </div>
         <Progress 
-          value={riskLevel} 
+          value={alert.riskLevel} 
           className="h-3 bg-neutral-200" 
-          indicatorClassName={riskColor === 'danger' ? 'bg-[#f44336]' : 'bg-[#ff9800]'} 
+          indicatorClassName={alert.riskColor === 'danger' ? 'bg-[#f44336]' : 'bg-[#ff9800]'} 
         />
       </div>
       
@@ -250,8 +248,13 @@ export function RiskMonitoring() {
   const [isAlertDetailsOpen, setIsAlertDetailsOpen] = useState(false);
   const [isAllAlertsOpen, setIsAllAlertsOpen] = useState(false);
   
-  // Obtener las alertas desde el hook
-  const { data: dbAlerts = [] } = useAlerts();
+  // Obtener las alertas reales de la base de datos
+  const { data: dbAlerts = [] } = useQuery<Alert[]>({
+    queryKey: ['/api/alerts'],
+    queryFn: async () => {
+      return await apiRequest('/api/alerts');
+    }
+  });
   
   // Inicializar alertas desde los datos constantes
   useEffect(() => {
@@ -385,7 +388,7 @@ export function RiskMonitoring() {
             <DialogTitle>Todas las Alertas</DialogTitle>
             <DialogDescription>Lista completa de alertas del sistema</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
+          <div className="max-h-[60vh] overflow-y-auto">
             {allAlerts.map((alert) => (
               <RiskAlertItem 
                 key={alert.id} 
@@ -409,50 +412,50 @@ export function RiskMonitoring() {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-        <div className="flex items-start">
-          <div className="w-8 h-8 bg-red-100 text-red-600 rounded-md flex items-center justify-center mr-3">
-            <Bell className="h-4 w-4" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-neutral-800 mb-1">Monitoreo de Riesgo</h3>
-            <p className="text-sm text-neutral-500">Alertas activas que requieren acción</p>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-lg shadow-sm p-6"
+    >
+      <div className="flex items-start mb-4">
+        <div className="w-8 h-8 bg-[#fff8e1] text-[#ff9800] rounded-md flex items-center justify-center mr-3">
+          <Bell className="h-4 w-4" />
         </div>
-        
-        <Button 
-          variant="outline" 
-          className="px-3 py-2 flex items-center mt-2 sm:mt-0"
-          onClick={() => setIsAllAlertsOpen(true)}
-        >
-          <ClipboardList className="h-4 w-4 mr-1" />
-          <span>Ver Todas</span>
-        </Button>
-      </div>
-      
-      <div className="space-y-3">
-        {alerts.length === 0 ? (
-          <div className="text-center py-8 bg-neutral-50 rounded-lg">
-            <UserCheck className="h-12 w-12 text-green-500 mx-auto mb-3" />
-            <h4 className="text-lg font-semibold text-neutral-800 mb-1">Sin Alertas Activas</h4>
-            <p className="text-sm text-neutral-500">No hay alertas de riesgo que requieran acción en este momento.</p>
+        <div className="flex-1 flex flex-col sm:flex-row sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-800">Monitoreo de Riesgos</h3>
+            <p className="text-sm text-neutral-500">Alertas de pacientes que requieren atención</p>
           </div>
-        ) : (
-          <>
-            {alerts.map((alert) => (
-              <RiskAlertItem 
-                key={alert.id} 
-                alert={alert} 
-                onClick={handleAlertClick} 
-              />
-            ))}
-          </>
-        )}
+          <Badge className="self-start sm:self-center mt-2 sm:mt-0 bg-red-100 text-red-600 border-none">
+            {alerts.length} Alertas Activas
+          </Badge>
+        </div>
       </div>
       
+      {/* Lista de alertas */}
+      {alerts.map((alert) => (
+        <RiskAlertItem 
+          key={alert.id} 
+          alert={alert} 
+          onClick={handleAlertClick} 
+        />
+      ))}
+      
+      <Button 
+        variant="secondary" 
+        className="w-full py-2 px-4 bg-neutral-100 text-neutral-700 hover:bg-neutral-200 rounded-md flex items-center justify-center"
+        onClick={() => setIsAllAlertsOpen(true)}
+      >
+        <ClipboardList className="h-4 w-4 mr-2" />
+        <span>Ver Todas las Alertas</span>
+      </Button>
+      
+      {/* Diálogos y drawers */}
       <AlertDetailsDialog />
       <AllAlertsDialog />
-    </div>
+    </motion.div>
   );
 }
+
+export default RiskMonitoring;

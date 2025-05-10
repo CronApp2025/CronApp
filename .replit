@@ -17,9 +17,14 @@ externalPort = 80
 [[ports]]
 localPort = 5001
 externalPort = 3000
+exposeLocalhost = true
+
+[[ports]]
+localPort = 5002
+externalPort = 3001
 
 [workflows]
-runButton = "Project"
+runButton = "Start App"
 
 [[workflows.workflow]]
 name = "Start App"
@@ -37,20 +42,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Vite Dev Server"
+args = "Flask API Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flask API Server"
-
-[[workflows.workflow]]
-name = "Vite Dev Server"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd client && npm run dev -- --port 5001"
-waitForPort = 5001
+args = "Client Dev Server"
 
 [[workflows.workflow]]
 name = "Flask API Server"
@@ -58,5 +54,14 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python api/app.py"
+args = "cd api && python app.py"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Client Dev Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd client && npm run dev"
+waitForPort = 5001

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Activity, 
   CalendarDays, 
@@ -22,11 +22,10 @@ import {
   CarouselNext, 
   CarouselPrevious 
 } from "@/components/ui/carousel";
+import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
-import { MOCK_PATIENTS } from "@/lib/constants";
-import { formatDateString } from "@/lib/utils";
-import { usePatients } from "@/hooks/use-patient";
-import { Alert, Condition, Patient } from "@shared/schema";
+import type { Patient, Condition, Alert } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
 
 // Variantes para animaciones
 const fadeIn = {
@@ -49,57 +48,57 @@ const slideUp = {
 // Componente para mostrar el perfil del paciente
 export function PatientProfile() {
   const [currentPatientIndex, setCurrentPatientIndex] = useState(0);
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
 
   // Consulta para obtener todos los pacientes
   const { 
-    data: usersData,
+    data: patients = [], 
     isLoading: loadingPatients,
     error: patientsError 
-  } = usePatients();
-
-  // Convertir usuarios a formato de paciente
-  useEffect(() => {
-    if (usersData && Array.isArray(usersData)) {
-      // Mapear usuarios a formato de paciente
-      const mappedPatients = usersData.map((user: User) => ({
-        id: user.id,
-        fullName: `${user.nombre} ${user.apellido}`,
-        age: calculateAge(user.fecha_nacimiento),
-        gender: "Masculino", // Este dato no está disponible en el modelo actual
-        status: "active",
-        fecha_nacimiento: user.fecha_nacimiento.toString(),
-        conditions: [] // Las condiciones se cargarían de forma separada
-      }));
-      
-      if (mappedPatients.length > 0) {
-        setPatients(mappedPatients);
-      }
+  } = useQuery<Patient[]>({
+    queryKey: ['/api/patients'],
+    queryFn: async () => {
+      return await apiRequest('/api/patients');
     }
-  }, [usersData]);
-
-  // Función para calcular la edad
-  function calculateAge(birthDateStr: string): number {
-    try {
-      const birthDate = new Date(birthDateStr);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      
-      // Ajustar la edad si no ha cumplido años todavía este año
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      
-      return age;
-    } catch (e) {
-      console.error("Error calculando edad:", e);
-      return 0;
-    }
-  }
+  });
 
   // Obtener el paciente actual basado en el índice
   const patient = patients[currentPatientIndex];
+
+  // Consulta para obtener condiciones del paciente actual
+  const { 
+    data: conditions = [], 
+    isLoading: loadingConditions,
+    refetch: refetchConditions
+  } = useQuery<Condition[]>({
+    queryKey: ['/api/conditions', patient?.id],
+    queryFn: async () => {
+      if (!patient) return [];
+      return await apiRequest(`/api/conditions?patientId=${patient.id}`);
+    },
+    enabled: !!patient
+  });
+
+  // Consulta para obtener alertas del paciente actual
+  const { 
+    data: alerts = [], 
+    isLoading: loadingAlerts,
+    refetch: refetchAlerts
+  } = useQuery<Alert[]>({
+    queryKey: ['/api/alerts', patient?.id],
+    queryFn: async () => {
+      if (!patient) return [];
+      return await apiRequest(`/api/alerts?patientId=${patient.id}`);
+    },
+    enabled: !!patient
+  });
+
+  // Refetch cuando cambia el paciente
+  useEffect(() => {
+    if (patient) {
+      refetchConditions();
+      refetchAlerts();
+    }
+  }, [patient, refetchConditions, refetchAlerts]);
 
   // Manejar cambio de paciente con el carrusel
   const handlePreviousPatient = () => {
@@ -176,14 +175,10 @@ export function PatientProfile() {
     return "bg-[#4caf50]";
   };
 
-  // Datos de ejemplo para condiciones y alertas mientras se integra la API
-  const conditions = patient.conditions || [];
-  const alerts: Alert[] = [];
-
   // Encontrar la condición principal y cualquier alerta crítica
   const primaryCondition = conditions[0];
   const secondaryCondition = conditions[1];
-  const criticalAlert = alerts.find((a: Alert) => (a.risk_level || 0) > 80);
+  const criticalAlert = alerts.find((a: Alert) => (a.riskLevel || 0) > 80);
 
   return (
     <motion.div 
@@ -285,7 +280,7 @@ export function PatientProfile() {
                       <div className="text-lg font-semibold text-neutral-800 mb-1">{primaryCondition.name}</div>
                       <div className="text-xs text-neutral-500 flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
-                        Actualizado: {primaryCondition.lastUpdated ? formatDateString(primaryCondition.lastUpdated) : 'N/A'}
+                        Actualizado: {primaryCondition.lastUpdated ? new Date(primaryCondition.lastUpdated).toLocaleDateString() : 'N/A'}
                       </div>
                     </motion.div>
                   )}
@@ -305,7 +300,7 @@ export function PatientProfile() {
                       <div className="text-lg font-semibold text-neutral-800 mb-1">{secondaryCondition.name}</div>
                       <div className="text-xs text-neutral-500 flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
-                        Actualizado: {secondaryCondition.lastUpdated ? formatDateString(secondaryCondition.lastUpdated) : 'N/A'}
+                        Actualizado: {secondaryCondition.lastUpdated ? new Date(secondaryCondition.lastUpdated).toLocaleDateString() : 'N/A'}
                       </div>
                     </motion.div>
                   )}
@@ -320,21 +315,14 @@ export function PatientProfile() {
                         <h4 className="text-sm font-semibold text-neutral-700">Nivel de Riesgo</h4>
                       </div>
                       <div className="text-lg font-semibold text-neutral-800 mb-1">
-                        Alto ({criticalAlert.risk_level || 0}%)
+                        Alto ({criticalAlert.riskLevel || 0}%)
                       </div>
                       <Progress 
-                        value={criticalAlert.risk_level || 0} 
+                        value={criticalAlert.riskLevel || 0} 
                         className="h-2 bg-neutral-200" 
-                        indicatorClassName={getSeverityColor(criticalAlert.risk_level)}
+                        indicatorClassName="bg-[#ff9800]" 
                       />
                     </motion.div>
-                  )}
-
-                  {/* Si no hay condiciones, mostrar mensaje */}
-                  {conditions.length === 0 && (
-                    <div className="col-span-3 bg-neutral-50 rounded-lg p-4 text-center">
-                      <p className="text-neutral-600">No hay condiciones médicas registradas</p>
-                    </div>
                   )}
                 </div>
               </div>
@@ -343,62 +331,161 @@ export function PatientProfile() {
         </CarouselContent>
       </Carousel>
 
-      {/* Opciones de pestaña */}
-      <Tabs defaultValue="historia" className="p-6">
-        <TabsList className="mb-4">
-          <TabsTrigger value="historia">Historia Clínica</TabsTrigger>
-          <TabsTrigger value="tratamientos">Tratamientos</TabsTrigger>
-          <TabsTrigger value="notas">Notas</TabsTrigger>
-          <TabsTrigger value="estadisticas">Estadísticas</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="historia" className="space-y-4">
-          <div className="bg-neutral-50 rounded-lg p-4">
-            <h3 className="font-semibold text-neutral-800 mb-3">Historial Clínico</h3>
-            {conditions.length === 0 ? (
-              <p className="text-sm text-neutral-600">No hay historial clínico disponible para este paciente.</p>
+      {/* Tabs con datos del paciente - SOLUCIÓN PARA LA PARTE RESPONSIVA */}
+      <div className="p-4 sm:p-6">
+        <Tabs defaultValue="conditions">
+          {/* Aquí está la modificación principal para solucionar el problema de superposición */}
+          <TabsList className="flex flex-row w-full mb-4 sm:mb-6 overflow-x-auto">
+            <TabsTrigger 
+              value="conditions" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white transition-all py-1 text-sm whitespace-nowrap"
+            >
+              Condiciones
+            </TabsTrigger>
+            <TabsTrigger 
+              value="alerts" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white transition-all py-1 text-sm whitespace-nowrap"
+            >
+              Alertas
+            </TabsTrigger>
+            <TabsTrigger 
+              value="history" 
+              className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-white transition-all py-1 text-sm whitespace-nowrap"
+            >
+              Historial
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Pestaña de Condiciones */}
+          <TabsContent value="conditions" className="space-y-4">
+            {loadingConditions ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-20 bg-neutral-100 rounded"></div>
+                <div className="h-20 bg-neutral-100 rounded"></div>
+              </div>
+            ) : conditions.length === 0 ? (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-neutral-700">Sin condiciones registradas</h3>
+                <p className="text-neutral-500">Este paciente no tiene condiciones médicas registradas</p>
+              </div>
             ) : (
-              <div className="space-y-3">
-                {conditions.map((condition, idx) => (
-                  <div key={idx} className="flex items-start">
-                    <div className="w-8 h-8 flex-shrink-0 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                      {condition.icon === 'heart' ? 
-                        <Heart className="h-4 w-4 text-blue-600" /> : 
-                        <Activity className="h-4 w-4 text-blue-600" />
-                      }
+              conditions.map((condition: Condition) => (
+                <motion.div 
+                  key={condition.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="border border-neutral-100 rounded-lg p-4 hover:shadow-md transition-all duration-300"
+                >
+                  <div className="flex items-start">
+                    <div className={`w-10 h-10 bg-${condition.color || 'blue'}-100 text-${condition.color || 'blue'}-600 rounded-md flex items-center justify-center mr-4 flex-shrink-0`}>
+                      {condition.icon === 'activity' ? (
+                        <Activity className="h-5 w-5" />
+                      ) : (
+                        <Heart className="h-5 w-5" />
+                      )}
                     </div>
-                    <div>
-                      <h4 className="font-medium text-neutral-800">{condition.name}</h4>
-                      <p className="text-xs text-neutral-500">Registrado: {formatDateString(condition.lastUpdated || new Date().toISOString())}</p>
+                    <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                        <h3 className="text-lg font-semibold text-neutral-800 mb-1">{condition.name}</h3>
+                        <span className="text-xs text-neutral-500">
+                          Actualizado: {condition.lastUpdated ? new Date(condition.lastUpdated).toLocaleDateString() : 'N/A'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-neutral-500">{condition.type}</p>
+
+                      <div className="mt-3 flex flex-col sm:flex-row sm:justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="px-3 py-1 border text-blue-600 hover:bg-blue-50 rounded-md flex items-center justify-center text-sm transition-colors"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          <span>Ver Detalles</span>
+                          <ChevronDown className="h-3 w-3 ml-1" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              ))
             )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="tratamientos">
-          <div className="bg-neutral-50 rounded-lg p-4">
-            <h3 className="font-semibold text-neutral-800 mb-3">Tratamientos Actuales</h3>
-            <p className="text-sm text-neutral-600">No hay tratamientos activos registrados.</p>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="notas">
-          <div className="bg-neutral-50 rounded-lg p-4">
-            <h3 className="font-semibold text-neutral-800 mb-3">Notas Clínicas</h3>
-            <p className="text-sm text-neutral-600">No hay notas disponibles para este paciente.</p>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="estadisticas">
-          <div className="bg-neutral-50 rounded-lg p-4">
-            <h3 className="font-semibold text-neutral-800 mb-3">Estadísticas del Paciente</h3>
-            <p className="text-sm text-neutral-600">No hay estadísticas disponibles para mostrar.</p>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+
+          {/* Pestaña de Alertas */}
+          <TabsContent value="alerts" className="space-y-4">
+            {loadingAlerts ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-20 bg-neutral-100 rounded"></div>
+                <div className="h-20 bg-neutral-100 rounded"></div>
+              </div>
+            ) : alerts.length === 0 ? (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-neutral-700">Sin alertas activas</h3>
+                <p className="text-neutral-500">Este paciente no tiene alertas activas</p>
+              </div>
+            ) : (
+              alerts.map((alert: Alert) => (
+                <motion.div 
+                  key={alert.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="border border-neutral-100 rounded-lg p-4 hover:shadow-md transition-all duration-300"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-semibold text-neutral-800">{alert.alertType}</h4>
+                      <p className="text-xs text-neutral-500">
+                        Creado: {alert.createdAt ? new Date(alert.createdAt).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </div>
+                    <div className={`px-2 py-1 rounded-full text-xs ${alert.riskColor === 'danger' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+                      {alert.riskLevel}% de riesgo
+                    </div>
+                  </div>
+
+                  <div className="mt-2">
+                    <div className="text-sm text-neutral-600 mb-1">Nivel de Riesgo</div>
+                    <div className="relative h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${alert.riskLevel || 0}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className={getSeverityColor(alert.riskLevel)}
+                        style={{ height: '100%' }}
+                      ></motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </TabsContent>
+
+          {/* Pestaña de Historial */}
+          <TabsContent value="history">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="border border-neutral-100 rounded-lg p-4 sm:p-6"
+            >
+              <div className="text-center">
+                <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-2 sm:mb-3" />
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-800">Historial Médico</h3>
+                <p className="text-sm text-neutral-500 mb-3 sm:mb-4 px-2">El historial médico completo está disponible para revisión</p>
+                <Button className="bg-primary text-white hover:bg-primary/90 transition-colors text-sm w-full sm:w-auto justify-center">
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
+                  Descargar Historial
+                </Button>
+              </div>
+            </motion.div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </motion.div>
   );
 }
+
+export default PatientProfile;

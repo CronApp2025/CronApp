@@ -96,13 +96,13 @@ const StatsPage = () => (
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
   const [location] = useLocation();
-
+  
   // Agregar logs para depuración
   console.log("AppContent: Ubicación actual:", location);
-
+  
   // Lista explícita de rutas públicas
   const publicRoutes = ['/login', '/register', '/forgot-password'];
-
+  
   // Comprobar si es una ruta pública
   const isPublicRoute = publicRoutes.some(route => 
     typeof location === 'string' && location.startsWith(route)
@@ -111,7 +111,7 @@ const AppContent = () => {
   // Explícitamente excluir las rutas de reset-password, que ahora se manejan completamente
   // fuera de AppContent en el componente App principal
   const isResetPasswordRoute = typeof location === 'string' && location.startsWith('/reset-password/');
-
+  
   // Si es una ruta de reseteo, no hacemos nada (se manejará en App.tsx)
   if (isResetPasswordRoute) {
     console.log("AppContent: Ignorando ruta de reseteo, se maneja en App principal");
@@ -150,9 +150,9 @@ const AppContent = () => {
 // Página independiente de reseteo de contraseña que se manejará fuera del contexto de autenticación
 const StandaloneResetPasswordPage = ({ params }: { params: { token: string } }) => {
   const { token } = params;
-
+  
   console.log("Renderizando página de reseteo standalone con token:", token);
-
+  
   if (!token) {
     console.error("No se encontró token en la URL");
     return (
@@ -172,7 +172,7 @@ const StandaloneResetPasswordPage = ({ params }: { params: { token: string } }) 
       </div>
     );
   }
-
+  
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-neutral">
       <div className="w-full max-w-md mx-auto">
@@ -188,84 +188,81 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
         <AuthProvider>
-          {({ isLoading }) => (
-            <div className="min-h-screen bg-background">
-              {isLoading && <LoadingScreen message="Cargando aplicación..." />}
-              <Switch>
-                {/* Las rutas públicas */}
-                <Route path="/login" component={LoginPage} />
-                <Route path="/register" component={RegisterPage} />
-                <Route path="/forgot-password" component={ForgotPasswordPage} />
-                <Route path="/reset-password/:token">
-                  {(params) => <ResetPasswordPage params={params} />}
-                </Route>
-
-                {/* Rutas que requieren autenticación */}
-                <Route path="/">
-                  {() => {
-                    const { isAuthenticated } = useAuth();
-                    if (!isAuthenticated) {
-                      return <LoginPage />;
-                    }
-                    return <DashboardPage />;
-                  }}
-                </Route>
-                <Route path="/dashboard">
-                  {() => {
-                    const { isAuthenticated } = useAuth();
-                    if (!isAuthenticated) {
-                      return <LoginPage />;
-                    }
-                    return <DashboardPage />;
-                  }}
-                </Route>
-                <Route path="/settings">
-                  {() => {
-                    const { isAuthenticated } = useAuth();
-                    if (!isAuthenticated) {
-                      return <LoginPage />;
-                    }
-                    return (
-                      <DashboardLayout>
-                        <SettingsFormNew />
-                      </DashboardLayout>
-                    );
-                  }}
-                </Route>
-                <Route path="/condiciones">
-                  {() => {
-                    const { isAuthenticated } = useAuth();
-                    if (!isAuthenticated) {
-                      return <LoginPage />;
-                    }
-                    return <ConditionsPage />;
-                  }}
-                </Route>
-                <Route path="/pacientes">
-                  {() => {
-                    const { isAuthenticated } = useAuth();
-                    if (!isAuthenticated) {
-                      return <LoginPage />;
-                    }
-                    return <PatientsPage />;
-                  }}
-                </Route>
-                <Route path="/estadisticas">
-                  {() => {
-                    const { isAuthenticated } = useAuth();
-                    if (!isAuthenticated) {
-                      return <LoginPage />;
-                    }
-                    return <StatsPage />;
-                  }}
-                </Route>
-
-                {/* Ruta para manejar 404s */}
-                <Route component={NotFound} />
-              </Switch>
-              <Toaster />
-            </div>
-          )}
+          <div className="min-h-screen bg-background">
+            <Switch>
+              {/* Las rutas públicas */}
+              <Route path="/login" component={LoginPage} />
+              <Route path="/register" component={RegisterPage} />
+              <Route path="/forgot-password" component={ForgotPasswordPage} />
+              <Route path="/reset-password/:token">
+                {(params) => <ResetPasswordPage params={params} />}
+              </Route>
+              
+              {/* Rutas que requieren autenticación */}
+              <Route path="/">
+                {() => {
+                  const { isAuthenticated } = useAuth();
+                  if (!isAuthenticated) {
+                    return <LoginPage />;
+                  }
+                  return <DashboardPage />;
+                }}
+              </Route>
+              <Route path="/dashboard">
+                {() => {
+                  const { isAuthenticated } = useAuth();
+                  if (!isAuthenticated) {
+                    return <LoginPage />;
+                  }
+                  return <DashboardPage />;
+                }}
+              </Route>
+              <Route path="/settings">
+                {() => {
+                  const { isAuthenticated } = useAuth();
+                  if (!isAuthenticated) {
+                    return <LoginPage />;
+                  }
+                  return (
+                    <DashboardLayout>
+                      <SettingsFormNew />
+                    </DashboardLayout>
+                  );
+                }}
+              </Route>
+              <Route path="/condiciones">
+                {() => {
+                  const { isAuthenticated } = useAuth();
+                  if (!isAuthenticated) {
+                    return <LoginPage />;
+                  }
+                  return <ConditionsPage />;
+                }}
+              </Route>
+              <Route path="/pacientes">
+                {() => {
+                  const { isAuthenticated } = useAuth();
+                  if (!isAuthenticated) {
+                    return <LoginPage />;
+                  }
+                  return <PatientsPage />;
+                }}
+              </Route>
+              <Route path="/estadisticas">
+                {() => {
+                  const { isAuthenticated } = useAuth();
+                  if (!isAuthenticated) {
+                    return <LoginPage />;
+                  }
+                  return <StatsPage />;
+                }}
+              </Route>
+              
+              {/* Ruta para manejar 404s */}
+              <Route component={NotFound} />
+            </Switch>
+            <Toaster />
+          </div>
         </AuthProvider>
       </GoogleOAuthProvider>
     </QueryClientProvider>

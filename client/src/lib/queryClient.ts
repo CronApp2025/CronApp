@@ -2,9 +2,9 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { API_URL } from './constants';
 
 // Base URL para la API de Flask
-// Usamos una URL relativa para que el navegador use el mismo origen y puerto que la aplicación
-// Esto evita problemas de CORS y permite que la API funcione tanto en desarrollo como en producción
-const API_BASE_URL = '';
+// Utilizamos la URL configurada en constants.ts que apunta al puerto correcto del servidor Flask (5002)
+// en lugar de basarnos en el origen de la ventana actual
+const API_BASE_URL = API_URL;
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, FileText, Eye, Heart, Microscope, Activity, AlertTriangle, Search, Filter, UserPlus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,14 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { CONDITIONS } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
-import { Condition, Metric } from "@shared/schema";
+import { Patient, Condition, Metric } from "@shared/schema";
 import { formatDateString } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useConditions } from "@/hooks/use-patient";
 
 // Componente para mostrar una métrica de condición
 const ConditionMetric = ({ metric }: { metric: any }) => {
@@ -76,7 +75,7 @@ const ConditionCard = ({ condition, onOpenDetails }: { condition: any, onOpenDet
         </div>
         
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {condition.metrics && condition.metrics.map((metric: any, index: number) => (
+          {condition.metrics.map((metric: any, index: number) => (
             <ConditionMetric key={index} metric={metric} />
           ))}
         </div>
@@ -129,7 +128,7 @@ const ConditionDetails = ({ condition, onClose }: { condition: any, onClose: () 
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
-        {condition.metrics && condition.metrics.map((metric: any, index: number) => (
+        {condition.metrics.map((metric: any, index: number) => (
           <div key={index} className="bg-neutral-50 p-4 rounded-md">
             <h4 className="font-semibold text-neutral-700 mb-2">{metric.name}</h4>
             <p className="text-sm text-neutral-600 mb-1">{metric.label}</p>
@@ -219,18 +218,18 @@ const AddConditionForm = ({ onClose }: { onClose: () => void }) => {
 export function ConditionManagement() {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredConditions, setFilteredConditions] = useState<any[]>([]);
+  const [filteredConditions, setFilteredConditions] = useState<any[]>(CONDITIONS);
   const [selectedCondition, setSelectedCondition] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAddConditionOpen, setIsAddConditionOpen] = useState(false);
   
-  // Obtener las condiciones desde el hook
-  const { data: conditions = [] } = useConditions();
-  
-  // Inicializar las condiciones filtradas cuando se cargan las condiciones
-  useEffect(() => {
-    setFilteredConditions(CONDITIONS);
-  }, []);
+  // Obtener las condiciones reales de la base de datos
+  const { data: conditions = [] } = useQuery<Condition[]>({
+    queryKey: ['/api/conditions'],
+    queryFn: async () => {
+      return await apiRequest('/api/conditions');
+    }
+  });
   
   // Filtra las condiciones según el término de búsqueda
   useEffect(() => {
@@ -329,83 +328,83 @@ export function ConditionManagement() {
       <div className="p-6 border-b border-neutral-100">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-neutral-800 mb-1">Gestión de Condiciones</h2>
-            <p className="text-sm text-neutral-500">Administre condiciones médicas y tratamientos</p>
+            <h2 className="text-xl font-semibold text-neutral-800">Gestor de Condiciones del Paciente</h2>
+            <p className="text-sm text-neutral-500 mt-1">
+              Sistema interactivo de monitoreo y tratamiento de enfermedades
+            </p>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Buscar condiciones..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 py-2 text-sm"
-              />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
-            </div>
-            
-            <Button 
-              variant="outline"
-              className="flex items-center px-3"
-            >
-              <Filter className="h-4 w-4 mr-1" />
-              <span>Filtrar</span>
-            </Button>
-            
-            <Button 
-              className="flex items-center px-3 whitespace-nowrap"
-              onClick={() => setIsAddConditionOpen(true)}
-            >
-              <UserPlus className="h-4 w-4 mr-1" />
-              <span>Nueva Condición</span>
-            </Button>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-primary-50 text-primary border-none">
+              <Settings className="h-3 w-3 mr-1" />
+              Herramientas
+            </Badge>
+            <Badge className="bg-[#e8f5e9] text-[#4caf50] border-none">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              Monitoreo Activo
+            </Badge>
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 rounded-full text-xs">
-            Activas <span className="font-semibold">{filteredConditions.length}</span>
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 rounded-full text-xs">
-            Monitoreo Continuo <span className="font-semibold">2</span>
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 rounded-full text-xs">
-            <Settings className="h-3 w-3 mr-1" />
-            <span>Configurar Vista</span>
-          </Badge>
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Input 
+              type="text" 
+              placeholder="Buscar condiciones..." 
+              className="w-full pl-10 pr-4 py-2 rounded-md"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Search className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" />
+          </div>
+          <Button 
+            variant="outline" 
+            className="px-4 py-2 border border-neutral-200 rounded-md flex items-center text-neutral-700 hover:bg-neutral-50"
+            onClick={() => toast({
+              title: "Filtros",
+              description: "Los filtros se han aplicado correctamente."
+            })}
+          >
+            <Filter className="h-5 w-5 mr-2" />
+            <span>Filtros</span>
+          </Button>
         </div>
       </div>
       
-      <div>
-        {filteredConditions.length === 0 ? (
-          <div className="p-8 text-center">
-            <AlertTriangle className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-neutral-700 mb-1">No se encontraron condiciones</h3>
-            <p className="text-sm text-neutral-500 mb-4">No hay condiciones que coincidan con tu búsqueda.</p>
-            <Button 
-              variant="outline" 
-              onClick={() => setSearchTerm("")}
-              className="mx-auto"
-            >
-              Mostrar Todas
-            </Button>
+      {/* Lista de condiciones */}
+      {filteredConditions.map((condition) => (
+        <ConditionCard 
+          key={condition.id} 
+          condition={condition} 
+          onOpenDetails={handleOpenDetails}
+        />
+      ))}
+      
+      <div className="p-6 border-t border-neutral-100 bg-neutral-50">
+        <div className="flex flex-col sm:flex-row justify-between items-center">
+          <div className="mb-4 sm:mb-0">
+            <p className="text-sm text-neutral-600">
+              Gestionando {filteredConditions.length} condiciones
+              <span className="text-neutral-500 text-xs block sm:inline sm:ml-2">
+                Última actualización: {formatDateString(new Date().toISOString())}
+              </span>
+            </p>
           </div>
-        ) : (
-          <>
-            {filteredConditions.map((condition, index) => (
-              <ConditionCard 
-                key={index} 
-                condition={condition} 
-                onOpenDetails={handleOpenDetails} 
-              />
-            ))}
-          </>
-        )}
+          
+          <Button 
+            className="px-4 py-2 bg-primary text-white rounded-md flex items-center justify-center hover:bg-primary-600 w-full sm:w-auto"
+            onClick={() => setIsAddConditionOpen(true)}
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            <span>Nueva Condición</span>
+          </Button>
+        </div>
       </div>
       
+      {/* Diálogos y drawers */}
       <DetailsDialog />
       <AddConditionDialog />
     </div>
   );
 }
+
+export default ConditionManagement;
