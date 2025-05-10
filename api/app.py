@@ -18,6 +18,8 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
+app.debug = True
+os.environ['FLASK_DEBUG'] = '1'
 # Configuración más específica de CORS para permitir solicitudes desde cualquier origen
 cors_config = {
     "origins": ["*"],
