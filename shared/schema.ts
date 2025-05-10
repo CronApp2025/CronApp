@@ -1,27 +1,27 @@
-import { pgTable, text, serial, integer, timestamp, date, boolean } from "drizzle-orm/pg-core";
+import { mysqlTable, varchar, int, timestamp, date, boolean, text, serial } from "drizzle-orm/mysql-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
 // Users table definition
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  nombre: text("nombre").notNull(),
-  apellido: text("apellido").notNull(),
-  email: text("email").notNull().unique(),
-  password: text("password"),
+export const users = mysqlTable("users", {
+  id: int("id").primaryKey().autoincrement(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  apellido: varchar("apellido", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }),
   fecha_nacimiento: date("fecha_nacimiento").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Medical conditions table
-export const conditions = pgTable("conditions", {
-  id: serial("id").primaryKey(),
-  user_id: integer("user_id").references(() => users.id).notNull(),
-  name: text("name").notNull(),
-  type: text("type").notNull(),
-  icon: text("icon").default("activity"), // 'heart', 'activity', etc.
+export const conditions = mysqlTable("conditions", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull().references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 255 }).notNull(),
+  icon: varchar("icon", { length: 255 }).default("activity"), // 'heart', 'activity', etc.
   diagnosed_date: date("diagnosed_date").notNull(),
   last_updated: timestamp("last_updated").defaultNow().notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
@@ -29,13 +29,13 @@ export const conditions = pgTable("conditions", {
 });
 
 // Medical metrics table
-export const metrics = pgTable("metrics", {
-  id: serial("id").primaryKey(),
-  condition_id: integer("condition_id").references(() => conditions.id).notNull(),
-  key: text("key").notNull(),
-  value: text("value").notNull(),
-  unit: text("unit"),
-  risk_level: text("risk_level"), // 'normal', 'warning', 'danger'
+export const metrics = mysqlTable("metrics", {
+  id: int("id").primaryKey().autoincrement(),
+  condition_id: int("condition_id").notNull().references(() => conditions.id),
+  key: varchar("key", { length: 255 }).notNull(),
+  value: varchar("value", { length: 255 }).notNull(),
+  unit: varchar("unit", { length: 50 }),
+  risk_level: varchar("risk_level", { length: 50 }), // 'normal', 'warning', 'danger'
   date_recorded: timestamp("date_recorded").defaultNow().notNull(),
 });
 
