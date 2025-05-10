@@ -62,7 +62,7 @@ def login():
                         secure_password = generate_password_hash(password)
                         update_query = "UPDATE users SET password = %s, updated_at = NOW() WHERE id = %s"
                         cursor.execute(update_query, (secure_password, user_data['id']))
-                        cursor.connection.commit()
+                        # El commit se maneja automáticamente dentro del contexto get_db_cursor
                         print(f"Contraseña actualizada a formato seguro para usuario: {user_data['id']}")
                     except Exception as e:
                         print(f"Error al actualizar contraseña a formato seguro: {e}")
@@ -210,8 +210,7 @@ def google_auth():
                     fecha_nacimiento = '2000-01-01'
                 
                 cursor.execute(insert_query, (nombre, apellido, email, hashed_password, fecha_nacimiento))
-                conn = cursor.connection
-                conn.commit()
+                # El commit se maneja automáticamente dentro del contexto get_db_cursor
                 
                 user_data = fetch_one_dict_from_result(cursor)
                 if not user_data:

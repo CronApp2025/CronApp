@@ -37,13 +37,26 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flask API"
+args = "Vite Dev Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flask API Server"
 
 [[workflows.workflow]]
-name = "Flask API"
+name = "Vite Dev Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./start-flask-api.sh"
+args = "cd client && npm run dev -- --port 5001"
+waitForPort = 5001
+
+[[workflows.workflow]]
+name = "Flask API Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python api/app.py"
 waitForPort = 5000
