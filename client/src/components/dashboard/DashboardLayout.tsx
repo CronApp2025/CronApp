@@ -21,17 +21,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="min-h-screen bg-white">
       <Header activePath={window.location.pathname} />
       
-      <div className="flex-1 flex flex-col lg:flex-row">
+      <div className="flex flex-1">
         {!isMobile && (
-          <div className="lg:w-64 bg-white border-r border-neutral-200">
-            <Sidebar className="sticky top-0 p-4" />
+          <div className="w-80 fixed inset-y-0 top-16 bg-white border-r border-neutral-200 overflow-y-auto">
+            <Sidebar className="p-6" />
           </div>
         )}
         
-        <main className="flex-1 p-4 lg:p-6">
+        <main className={`flex-1 ${!isMobile ? 'ml-80' : ''} p-6`}>
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
