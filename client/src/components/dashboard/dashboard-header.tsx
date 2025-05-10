@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heart, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function DashboardHeader() {
   const { user } = useAuth();
   const [location] = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   const getInitials = (nombre: string, apellido: string) => {
     return `${nombre.charAt(0)}${apellido.charAt(0)}`.toUpperCase();
