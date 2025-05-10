@@ -4,13 +4,13 @@ from dotenv import load_dotenv
 # Cargar variables de entorno
 load_dotenv()
 
-# Usar la base de datos PostgreSQL de Replit
+# Usar la base de datos MySQL
 DB_CONFIG = {
-    'host': os.environ.get('PGHOST', 'localhost'),
-    'user': os.environ.get('PGUSER', 'postgres'),
-    'password': os.environ.get('PGPASSWORD', ''),
-    'database': os.environ.get('PGDATABASE', 'postgres'),
-    'port': os.environ.get('PGPORT', '5432')
+    'host': os.environ.get('MYSQL_HOST', 'localhost'),
+    'user': os.environ.get('MYSQL_USER', 'root'),
+    'password': os.environ.get('MYSQL_PASSWORD', ''),
+    'database': os.environ.get('MYSQL_DATABASE', 'cronapp'),
+    'port': os.environ.get('MYSQL_PORT', '3306')
 }
 
 # URL de conexión de base de datos

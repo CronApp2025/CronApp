@@ -197,15 +197,3 @@ def resetear_password(token):
 
 
 
-@recover_password.route('/test-email', methods=['POST'])
-def test_email():
-    try:
-        msg = Message(
-            'Prueba de correo desde SolutionHost',
-            recipients=['g.villacurat@gmail.com'],  
-            body='Este es un mensaje de prueba desde tu aplicación Flask.'
-        )
-        mail.send(msg)
-        return "Correo enviado correctamente!"
-    except Exception as e:
-        return f"Error al enviar correo: {str(e)}"
