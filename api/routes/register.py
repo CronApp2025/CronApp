@@ -1,11 +1,9 @@
 
-# routes/register.py
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
 from helper.validations import validate_email_format
 from helper.database import get_db_cursor, fetch_one_dict_from_result
 from helper.response_utils import success_response, error_response
-from helper.transaction import db_transaction
 
 register = Blueprint('register', __name__)
 
@@ -32,7 +30,6 @@ def register_usuario():
         # Hash de la contraseña
         hashed_password = generate_password_hash(data['password'])
 
-        # Usar with para manejar el cursor y la transacción
         with get_db_cursor(dictionary=True) as cursor:
             # Verificar si el email ya existe
             cursor.execute("SELECT id FROM users WHERE email = %s", (data['email'],))
@@ -59,7 +56,10 @@ def register_usuario():
             user_id = cursor.lastrowid
 
             # Obtener los datos del usuario creado
-            cursor.execute("SELECT id, nombre, apellido, email, fecha_nacimiento FROM users WHERE id = %s", (user_id,))
+            cursor.execute("""
+                SELECT id, nombre, apellido, email, fecha_nacimiento 
+                FROM users WHERE id = %s
+            """, (user_id,))
             new_user = cursor.fetchone()
 
             if not new_user:
