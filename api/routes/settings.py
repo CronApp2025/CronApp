@@ -28,7 +28,7 @@ def get_settings():
                 current_app.logger.warning(f"Usuario no encontrado: {user_id}")
                 return error_response("Usuario no encontrado", 404)
             
-            # Formatear fecha_nacimiento si existe
+            # Formatear fecha_nacimiento si existea
             fecha_nacimiento = None
             if user['fecha_nacimiento']:
                 try:

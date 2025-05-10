@@ -3,7 +3,7 @@ import os
 import mysql.connector
 import logging
 
-# Configurar logging
+# Configurar logging a
 logging.basicConfig(level=logging.INFO, 
                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

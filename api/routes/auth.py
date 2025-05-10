@@ -30,7 +30,7 @@ def login():
             print(f"Faltan datos: email={email}, password={'*' * len(password) if password else None}")
             return error_response("Email y contraseña son requeridos", 400)
 
-        # Consultar usuario en la base de datos PostgreSQL
+        # Consultar usuario en la base de datos PostgreSQLa
         with get_db_cursor(dictionary=True) as cursor:
             # Usar consulta directa en lugar de procedimiento almacenado
             query = "SELECT id, nombre, apellido, email, password, fecha_nacimiento FROM users WHERE email = %s"

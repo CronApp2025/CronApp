@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pythona
 import os
 import mysql.connector
 

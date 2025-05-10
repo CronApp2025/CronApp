@@ -11,7 +11,7 @@ from routes.usuario import usuarios
 from routes.recover_password import recover_password
 from routes.register import register
 from routes.settings import settings
-# Configurar logging
+# Configurar logginga
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

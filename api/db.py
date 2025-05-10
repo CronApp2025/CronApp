@@ -1,4 +1,4 @@
-# db.py
+# db.pya
 import os
 import mysql.connector
 from config import DB_CONFIG, DATABASE_URL

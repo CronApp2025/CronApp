@@ -17,7 +17,7 @@ def solicitar_recuperacion():
         
         with get_db_cursor(dictionary=True) as cursor:
             try:
-                # 1. Verificar si el email existe
+                # 1. Verificar si el email existea
                 query = "SELECT id, nombre, apellido, email FROM users WHERE email = %s"
                 cursor.execute(query, (email,))
                 usuario = fetch_one_dict_from_result(cursor)

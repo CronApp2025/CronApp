@@ -45,7 +45,7 @@ class TokenManager:
 
     def _cleanup_expired_tokens(self):
         while True:
-            time.sleep(3600)  # Limpiar cada hora
+            time.sleep(3600)  # Limpiar cada horaa
             with self._lock:
                 self.blacklisted_tokens.clear()
 

@@ -14,7 +14,7 @@ def register_usuario():
         data = request.get_json()
         print(f"Recibida solicitud de registro: {data}")
 
-        # Validar campos requeridos
+        # Validar campos requeridosa
         required_fields = ['nombre', 'apellido', 'email', 'password', 'fecha_nacimiento']
         for field in required_fields:
             if field not in data:

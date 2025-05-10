@@ -1,4 +1,4 @@
-#USUARIO
+#USUARIOa
 USER_PROCEDURES = {
     "AGREGAR": "agregar_usuario",
     "EDITAR": "editar_usuario",

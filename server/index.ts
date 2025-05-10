@@ -28,7 +28,7 @@ flaskProcess.stderr?.on('data', (data) => {
   console.error(`${data}`);
 });
 
-// Maneja el cierre del proceso
+// Maneja el cierre del proceso //a
 process.on('SIGINT', () => {
   console.log('Deteniendo el servidor Flask...');
   flaskProcess.kill();

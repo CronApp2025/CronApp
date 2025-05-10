@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import os
 import json
 
-# Crear la aplicación Flask para mock
+# Crear la aplicación Flask para mocka
 app = Flask(__name__)
 CORS(app)  # Permitir CORS
 

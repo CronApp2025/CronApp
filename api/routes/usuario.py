@@ -21,7 +21,7 @@ from flask_jwt_extended import jwt_required
 usuarios = Blueprint('usuarios', __name__)
 
 
-#AGREGAR USUARIO - REQUEST IN BODY
+#AGREGAR USUARIO - REQUEST IN BODYa
 @usuarios.route('/agregar_usuario', methods=['POST'])
 def agregar_usuario():
     try:

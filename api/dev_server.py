@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# dev_server.py
+# dev_server.pya
 # Script para iniciar un servidor de desarrollo Flask + Vite
 
 import os

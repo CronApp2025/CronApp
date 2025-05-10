@@ -1,7 +1,7 @@
 
 DELIMITER //
 
--- Procedimiento para agregar usuario
+-- Procedimiento para agregar usuarioa
 CREATE PROCEDURE agregar_usuario(
     IN p_nombre VARCHAR(255),
     IN p_apellido VARCHAR(255),

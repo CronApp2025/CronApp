@@ -3,7 +3,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Users table definition
+// Users table definitiona
 export const users = mysqlTable("users", {
   id: int("id").primaryKey().autoincrement(),
   nombre: varchar("nombre", { length: 255 }).notNull(),
