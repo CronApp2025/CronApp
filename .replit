@@ -13,18 +13,18 @@ run = ["sh", "-c", "npm run dev"]
 [[ports]]
 localPort = 5000
 externalPort = 80
-exposeLocalhost = true
 
 [[ports]]
 localPort = 5001
 externalPort = 3000
+exposeLocalhost = true
 
 [[ports]]
 localPort = 5002
 externalPort = 3001
 
 [workflows]
-runButton = "Start App"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Start App"
@@ -55,7 +55,7 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd api && python app.py"
-waitForPort = 5002
+waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Client Dev Server"
@@ -64,4 +64,3 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd client && npm run dev"
-waitForPort = 5000

@@ -137,7 +137,7 @@ def test_api():
     })
 
 if __name__ == '__main__':
-    # Usar puerto 5002 para evitar conflictos
-    puerto = 5002
+    # Usar puerto 5000 para acceso estándar
+    puerto = 5000
     print(f"Iniciando servidor Flask en http://0.0.0.0:{puerto}")
     app.run(host='0.0.0.0', port=puerto, debug=True)

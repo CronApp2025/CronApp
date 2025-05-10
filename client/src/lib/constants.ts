@@ -1,7 +1,7 @@
 // Constantes de la aplicación
 
-// Configuración para la API
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+// Configuración para la API - usando el mismo dominio/puerto que el frontend
+export const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 // Roles de usuario
 export const USER_ROLES = {
