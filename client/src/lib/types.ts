@@ -1,9 +1,13 @@
+// Tipos de usuario
 export interface User {
-  id: number;
+  id: number | string;
   nombre: string;
-  apellido: string;
+  apellido?: string;
   email: string;
-  fecha_nacimiento: string;
+  rol?: string;
+  especialidad?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface LoginCredentials {
@@ -11,11 +15,8 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+export interface GoogleLoginData {
+  token: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -23,93 +24,84 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ResetPasswordRequest {
-  new_password: string;
+  password: string;
+  confirmPassword: string;
 }
 
-export interface GoogleLoginData {
-  email: string;
-  nombre: string;
-  apellido?: string;
-  google_id?: string;
-  fecha_nacimiento?: string;
-  profile_picture?: string;
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  token: string | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
-export interface Condition {
-  id: number;
-  name: string;
-  type: string;
-  diagnosed_date: string;
-  metrics: Metric[];
-  icon?: string;
-  color?: string;
-  lastUpdated?: string;
-}
-
-export interface Metric {
-  id: number;
-  key: string;
-  value: string;
-  date_recorded: string;
-  name?: string;
-  label?: string;
-  icon?: string;
-  valueColor?: string | null;
-}
-
-export interface PatientProfile {
-  id: number;
-  nombre: string;
-  apellido: string;
-  edad: number;
-  genero: string;
-  fecha_nacimiento: string;
-  conditions: Condition[];
-}
-
-export interface Alert {
-  id: number;
-  patientId: string;
-  description: string;
-  level: number;
-  days: number;
-  alertType?: string;
-  time?: string;
-  riskLevel?: number;
-  riskColor?: string;
-}
-
-export interface EducationalResource {
-  id: number;
-  name: string;
-  icon: string;
-  category: string;
-  color: string;
-  url?: string;
-  description?: string;
-}
-
-export interface ClinicalAssistantMessage {
-  id: number;
-  icon: string;
-  message: string;
-  actions: {
-    primary: string;
-    secondary: string;
-  };
-}
-
+// Tipos para pacientes
 export interface Patient {
   id: number;
-  fullName: string; // nombre + apellido
+  fullName: string;
   age: number;
   gender: string;
   status: string;
-  fecha_nacimiento: string;
-  conditions: Array<{
-    id: number;
-    name: string;
-    icon: string;
-    lastUpdated: string;
-  }>;
+  fecha_nacimiento?: string;
+  conditions: PatientCondition[];
+}
+
+export interface PatientCondition {
+  id: number;
+  name: string;
+  icon?: string;
+  lastUpdated: string;
+}
+
+// Tipos para condiciones médicas
+export interface Condition {
+  id: number;
+  name: string;
+  category: string;
+  icon: string;
+  description?: string;
+  severity: number;
+  status: string;
+  lastUpdated: string;
+  patientId?: number;
+}
+
+// Tipos para alertas
+export interface Alert {
+  id: number;
+  patientId: number;
+  title: string;
+  description: string;
+  timestamp: string;
+  riskLevel: number;
+  isRead?: boolean;
+  category?: string;
+}
+
+// Tipos para recursos educativos
+export interface EducationalResource {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  url?: string;
+  publishedAt: string;
+  readTime: number;
+  isRecommended?: boolean;
+}
+
+// Tipos para configuraciones
+export interface UserSettings {
+  notificaciones: boolean;
+  idioma: string;
+  temaOscuro: boolean;
+}
+
+// Tipos de respuesta API
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  error?: string;
 }

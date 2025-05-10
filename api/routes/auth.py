@@ -30,45 +30,64 @@ def login():
             print(f"Faltan datos: email={email}, password={'*' * len(password) if password else None}")
             return error_response("Email y contraseña son requeridos", 400)
 
-        # Consultar usuario en la base de datos PostgreSQLa
+        # Consultar usuario en la base de datos
         with get_db_cursor(dictionary=True) as cursor:
-            # Usar consulta directa en lugar de procedimiento almacenado
+            # Mejorar la consulta para depuración
+            print(f"Buscando usuario con email: {email}")
             query = "SELECT id, nombre, apellido, email, password, fecha_nacimiento FROM users WHERE email = %s"
             cursor.execute(query, (email,))
             user_data = fetch_one_dict_from_result(cursor)
             
             if not user_data:
                 print(f"Usuario no encontrado para el email: {email}")
+                # Intenta una búsqueda más amplia para depuración
+                debug_query = "SELECT email FROM users LIMIT 5"
+                cursor.execute(debug_query)
+                debug_emails = cursor.fetchall()
+                print(f"Emails encontrados en la BD (muestra): {debug_emails}")
                 return error_response("Credenciales inválidas", 401)
+            
+            print(f"Usuario encontrado: {user_data}")
             
             # Verificar la contraseña
             stored_password = user_data.get('password', '')
+            print(f"Contraseña almacenada: {stored_password[:20]}...")
+            
+            # Mejorar la verificación de la contraseña con mayor robustez
+            is_valid = False
             
             # Verificar diversos formatos de hash de Werkzeug
-            if stored_password.startswith(('pbkdf2:', 'scrypt:', 'sha256:')): 
+            if stored_password and stored_password.startswith(('pbkdf2:', 'scrypt:', 'sha256:')):
                 # Werkzeug genera distintos formatos según la versión
                 try:
+                    print(f"Verificando hash Werkzeug: {stored_password[:20]}...")
                     is_valid = check_password_hash(stored_password, password)
+                    print(f"Resultado de verificación: {is_valid}")
                 except Exception as e:
-                    print(f"Error al verificar contraseña: {e}")
+                    print(f"Error al verificar contraseña hasheada: {e}")
                     is_valid = False
-            else:
+            elif stored_password:
                 # Comparación simple para contraseñas sin hash (sólo para desarrollo)
+                print(f"Contraseña sin hash, comparando directamente")
                 is_valid = stored_password == password
                 
                 # Si es válida, aprovechamos para actualizar a un formato seguro
-                if is_valid and stored_password != '':
+                if is_valid:
                     try:
-                        secure_password = generate_password_hash(password)
+                        print(f"Actualizando contraseña a formato seguro para: {user_data['id']}")
+                        secure_password = generate_password_hash(password, method='scrypt')
                         update_query = "UPDATE users SET password = %s, updated_at = NOW() WHERE id = %s"
                         cursor.execute(update_query, (secure_password, user_data['id']))
                         # El commit se maneja automáticamente dentro del contexto get_db_cursor
-                        print(f"Contraseña actualizada a formato seguro para usuario: {user_data['id']}")
+                        print(f"Contraseña actualizada a formato seguro: {secure_password[:20]}...")
                     except Exception as e:
                         print(f"Error al actualizar contraseña a formato seguro: {e}")
+            else:
+                print("No hay contraseña almacenada para este usuario")
+                is_valid = False
                 
             if not is_valid:
-                print("Contraseña incorrecta")
+                print("Verificación de contraseña fallida")
                 return error_response("Credenciales inválidas", 401)
         
         print(f"Usuario encontrado: {user_data}")

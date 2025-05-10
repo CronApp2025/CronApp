@@ -1,280 +1,293 @@
-import { Alert, Condition, EducationalResource, Patient } from "@/lib/types";
+// Constantes de la aplicación
 
-// Alertas de riesgo para pruebas
-export const RISK_ALERTS: Alert[] = [
+// Configuración para la API
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+
+// Roles de usuario
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  DOCTOR: 'doctor',
+  NURSE: 'enfermero'
+};
+
+// Mensajes de error
+export const ERROR_MESSAGES = {
+  LOGIN_FAILED: 'Credenciales incorrectas. Por favor, inténtalo de nuevo.',
+  NETWORK_ERROR: 'Error de conexión. Por favor, verifica tu conexión a internet.',
+  UNKNOWN_ERROR: 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.',
+  SESSION_EXPIRED: 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
+  INVALID_FORM: 'Por favor, completa correctamente todos los campos requeridos.',
+  FORBIDDEN: 'No tienes permiso para realizar esta acción.',
+  NOT_FOUND: 'El recurso solicitado no ha sido encontrado.'
+};
+
+// Tiempos de expiración
+export const TOKEN_EXPIRATION = 15 * 60 * 1000; // 15 minutos en milisegundos
+export const REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 días en milisegundos
+
+// Datos de ejemplo para la interfaz de usuario
+export const MOCK_PATIENTS = [
   {
     id: 1,
-    patientId: "1",
-    description: "Presión arterial elevada durante 3 días consecutivos",
-    level: 3,
-    days: 3,
-    alertType: "critical",
-    time: "10:30 AM",
-    riskLevel: 85,
-    riskColor: "#EF4444"
+    fullName: "María González",
+    age: 68,
+    gender: "Femenino",
+    status: "Estable",
+    fecha_nacimiento: "1956-03-15",
+    conditions: [
+      { id: 1, name: "Diabetes Tipo 2", icon: "🩸", lastUpdated: "2023-12-10T14:30:00" },
+      { id: 2, name: "Hipertensión", icon: "❤️", lastUpdated: "2023-12-12T10:15:00" },
+      { id: 3, name: "Artritis", icon: "🦴", lastUpdated: "2023-11-30T09:45:00" }
+    ]
   },
   {
     id: 2,
-    patientId: "1",
-    description: "Nivel de glucosa fuera de rango objetivo",
-    level: 2,
-    days: 1,
-    alertType: "warning",
-    time: "02:45 PM",
-    riskLevel: 65,
-    riskColor: "#F97316"
+    fullName: "Carlos Martínez",
+    age: 72,
+    gender: "Masculino",
+    status: "En tratamiento",
+    fecha_nacimiento: "1952-07-22",
+    conditions: [
+      { id: 4, name: "EPOC", icon: "🫁", lastUpdated: "2023-12-08T11:00:00" },
+      { id: 5, name: "Insuficiencia Cardíaca", icon: "❤️", lastUpdated: "2023-12-05T16:30:00" }
+    ]
   },
   {
     id: 3,
-    patientId: "2",
-    description: "Peso disminuyendo por debajo del umbral recomendado",
-    level: 2,
-    days: 5,
-    alertType: "warning",
-    time: "01:15 PM",
-    riskLevel: 60,
-    riskColor: "#F97316"
-  },
-  {
-    id: 4,
-    patientId: "3",
-    description: "No ha reportado mediciones en los últimos 5 días",
-    level: 1,
-    days: 5,
-    alertType: "notice",
-    time: "09:10 AM",
-    riskLevel: 40,
-    riskColor: "#3B82F6"
+    fullName: "Ana Rodríguez",
+    age: 65,
+    gender: "Femenino",
+    status: "Mejorando",
+    fecha_nacimiento: "1959-11-08",
+    conditions: [
+      { id: 6, name: "Osteoporosis", icon: "🦴", lastUpdated: "2023-12-01T13:45:00" },
+      { id: 7, name: "Hipotiroidismo", icon: "🦋", lastUpdated: "2023-11-28T10:30:00" }
+    ]
   }
 ];
 
-// Condiciones médicas para pruebas
-export const CONDITIONS: Condition[] = [
+export const CONDITIONS = [
   {
     id: 1,
-    name: "Hipertensión",
-    type: "chronic",
-    diagnosed_date: "2022-05-15",
-    metrics: [
-      {
-        id: 1,
-        key: "systolic",
-        name: "Sistólica",
-        value: "145",
-        date_recorded: "2023-11-01",
-        label: "mmHg",
-        valueColor: "#EF4444"
-      },
-      {
-        id: 2,
-        key: "diastolic",
-        name: "Diastólica",
-        value: "92",
-        date_recorded: "2023-11-01",
-        label: "mmHg",
-        valueColor: "#F97316"
-      },
-      {
-        id: 3,
-        key: "heart_rate",
-        name: "Pulso",
-        value: "78",
-        date_recorded: "2023-11-01",
-        label: "bpm",
-        valueColor: null
-      }
-    ],
-    icon: "heart-pulse",
-    color: "#EF4444",
-    lastUpdated: "2023-11-01T10:30:00Z"
-  },
-  {
-    id: 2,
     name: "Diabetes Tipo 2",
-    type: "chronic",
-    diagnosed_date: "2021-03-22",
-    metrics: [
-      {
-        id: 4,
-        key: "glucose",
-        name: "Glucosa",
-        value: "162",
-        date_recorded: "2023-11-02",
-        label: "mg/dL",
-        valueColor: "#F97316"
-      },
-      {
-        id: 5,
-        key: "hba1c",
-        name: "HbA1c",
-        value: "7.2",
-        date_recorded: "2023-10-01",
-        label: "%",
-        valueColor: "#F97316"
-      },
-      {
-        id: 6,
-        key: "weight",
-        name: "Peso",
-        value: "78",
-        date_recorded: "2023-11-01",
-        label: "kg",
-        valueColor: null
-      }
-    ],
-    icon: "droplet",
-    color: "#3B82F6",
-    lastUpdated: "2023-11-02T14:45:00Z"
-  },
-  {
-    id: 3,
-    name: "Asma",
-    type: "chronic",
-    diagnosed_date: "2019-08-15",
-    metrics: [
-      {
-        id: 7,
-        key: "peak_flow",
-        name: "Flujo máximo",
-        value: "380",
-        date_recorded: "2023-10-31",
-        label: "L/min",
-        valueColor: null
-      },
-      {
-        id: 8,
-        key: "symptoms",
-        name: "Síntomas",
-        value: "Leves",
-        date_recorded: "2023-10-31",
-        label: "",
-        valueColor: "#22C55E"
-      }
-    ],
-    icon: "lungs",
-    color: "#22C55E",
-    lastUpdated: "2023-10-31T08:15:00Z"
-  }
-];
-
-// Recursos educativos para pruebas
-export const EDUCATIONAL_RESOURCES: EducationalResource[] = [
-  {
-    id: 1,
-    name: "Guía de Hipertensión",
-    icon: "heart-pulse",
-    category: "cardiovascular",
-    color: "#EF4444",
-    url: "/resources/hypertension-guide.pdf",
-    description: "Guía completa para entender y manejar la hipertensión arterial."
+    category: "Endocrina",
+    icon: "🩸",
+    description: "Niveles elevados de glucosa en sangre con resistencia a la insulina.",
+    severity: 7,
+    status: "Activo",
+    lastUpdated: "2023-12-10T14:30:00",
+    patientId: 1
   },
   {
     id: 2,
-    name: "Control de Glucosa",
-    icon: "droplet",
-    category: "diabetes",
-    color: "#3B82F6",
-    url: "/resources/glucose-control.pdf",
-    description: "Consejos prácticos para monitorear y controlar los niveles de glucosa."
+    name: "Hipertensión",
+    category: "Cardiovascular",
+    icon: "❤️",
+    description: "Presión arterial elevada de forma crónica.",
+    severity: 6,
+    status: "En tratamiento",
+    lastUpdated: "2023-12-12T10:15:00",
+    patientId: 1
   },
   {
     id: 3,
-    name: "Ejercicios Respiratorios",
-    icon: "lungs",
-    category: "respiratory",
-    color: "#22C55E",
-    url: "/resources/breathing-exercises.pdf",
-    description: "Ejercicios de respiración para mejorar la función pulmonar."
+    name: "Artritis",
+    category: "Reumatológica",
+    icon: "🦴",
+    description: "Inflamación de las articulaciones con dolor y rigidez.",
+    severity: 5,
+    status: "Crónico",
+    lastUpdated: "2023-11-30T09:45:00",
+    patientId: 1
   },
   {
     id: 4,
-    name: "Alimentación Saludable",
-    icon: "utensils",
-    category: "nutrition",
-    color: "#A855F7",
-    url: "/resources/healthy-eating.pdf",
-    description: "Guía de alimentación para personas con condiciones crónicas."
+    name: "EPOC",
+    category: "Respiratoria",
+    icon: "🫁",
+    description: "Enfermedad pulmonar obstructiva crónica con dificultad respiratoria.",
+    severity: 8,
+    status: "Activo",
+    lastUpdated: "2023-12-08T11:00:00",
+    patientId: 2
   },
   {
     id: 5,
-    name: "Técnicas de Relajación",
-    icon: "smile",
-    category: "mental-health",
-    color: "#EC4899",
-    url: "/resources/relaxation-techniques.pdf",
-    description: "Técnicas para reducir el estrés y mejorar la salud mental."
+    name: "Insuficiencia Cardíaca",
+    category: "Cardiovascular",
+    icon: "❤️",
+    description: "Capacidad reducida del corazón para bombear sangre.",
+    severity: 9,
+    status: "En tratamiento",
+    lastUpdated: "2023-12-05T16:30:00",
+    patientId: 2
   },
   {
     id: 6,
-    name: "Adherencia a Medicamentos",
-    icon: "pill",
-    category: "medication",
-    color: "#F59E0B",
-    url: "/resources/medication-adherence.pdf",
-    description: "Importancia de seguir correctamente los tratamientos prescritos."
+    name: "Osteoporosis",
+    category: "Ósea",
+    icon: "🦴",
+    description: "Pérdida de densidad ósea con riesgo de fracturas.",
+    severity: 4,
+    status: "En seguimiento",
+    lastUpdated: "2023-12-01T13:45:00",
+    patientId: 3
+  },
+  {
+    id: 7,
+    name: "Hipotiroidismo",
+    category: "Endocrina",
+    icon: "🦋",
+    description: "Producción insuficiente de hormonas tiroideas.",
+    severity: 3,
+    status: "Controlado",
+    lastUpdated: "2023-11-28T10:30:00",
+    patientId: 3
   }
 ];
 
-// Datos de ejemplo para pacientes
-export const MOCK_PATIENTS: Patient[] = [
+export const RISK_ALERTS = [
   {
     id: 1,
-    fullName: "María García Rodríguez",
-    age: 56,
-    gender: "Femenino",
-    status: "Activo",
-    fecha_nacimiento: "1969-05-10",
-    conditions: [
-      {
-        id: 1,
-        name: "Hipertensión",
-        icon: "heart-pulse",
-        lastUpdated: "2023-11-01T10:30:00Z"
-      },
-      {
-        id: 2,
-        name: "Diabetes Tipo 2",
-        icon: "droplet",
-        lastUpdated: "2023-11-02T14:45:00Z"
-      }
-    ]
+    patientId: 1,
+    title: "Glucosa elevada",
+    description: "Niveles de glucosa consistentemente por encima de 200 mg/dL en las últimas lecturas",
+    timestamp: "2023-12-14T08:30:00",
+    riskLevel: 85,
+    isRead: false,
+    category: "Glucemia"
   },
   {
     id: 2,
-    fullName: "Carlos Martínez López",
-    age: 68,
-    gender: "Masculino",
-    status: "Activo",
-    fecha_nacimiento: "1957-11-22",
-    conditions: [
-      {
-        id: 1,
-        name: "Hipertensión",
-        icon: "heart-pulse",
-        lastUpdated: "2023-10-28T08:15:00Z"
-      },
-      {
-        id: 3,
-        name: "Asma",
-        icon: "lungs",
-        lastUpdated: "2023-10-31T08:15:00Z"
-      }
-    ]
+    patientId: 1,
+    title: "Presión arterial elevada",
+    description: "Presión arterial promedio de 160/95 mmHg en las últimas 3 mediciones",
+    timestamp: "2023-12-13T16:45:00",
+    riskLevel: 70,
+    isRead: true,
+    category: "Presión arterial"
   },
   {
     id: 3,
-    fullName: "Ana Jiménez Ortiz",
-    age: 42,
-    gender: "Femenino",
-    status: "Inactivo",
-    fecha_nacimiento: "1983-03-15",
-    conditions: [
-      {
-        id: 3,
-        name: "Asma",
-        icon: "lungs",
-        lastUpdated: "2023-10-25T15:45:00Z"
-      }
-    ]
+    patientId: 1,
+    title: "Riesgo de interacción medicamentosa",
+    description: "La combinación de medicamentos actuales puede aumentar el riesgo de efectos adversos",
+    timestamp: "2023-12-12T11:20:00",
+    riskLevel: 60,
+    isRead: false,
+    category: "Medicación"
+  },
+  {
+    id: 4,
+    patientId: 1,
+    title: "Baja adherencia al tratamiento",
+    description: "La paciente ha reportado olvidar tomar sus medicamentos en el último mes",
+    timestamp: "2023-12-10T09:15:00",
+    riskLevel: 50,
+    isRead: true,
+    category: "Adherencia"
+  },
+  {
+    id: 5,
+    patientId: 2,
+    title: "Saturación de oxígeno reducida",
+    description: "Saturación de oxígeno por debajo del 90% en las últimas mediciones",
+    timestamp: "2023-12-14T10:00:00",
+    riskLevel: 90,
+    isRead: false,
+    category: "Respiratorio"
+  },
+  {
+    id: 6,
+    patientId: 2,
+    title: "Aumento de edema periférico",
+    description: "Incremento significativo del edema en extremidades inferiores",
+    timestamp: "2023-12-13T14:30:00",
+    riskLevel: 75,
+    isRead: false,
+    category: "Cardiovascular"
+  },
+  {
+    id: 7,
+    patientId: 3,
+    title: "Riesgo de caída elevado",
+    description: "La evaluación de riesgo de caídas muestra un puntaje de 14/20",
+    timestamp: "2023-12-14T09:45:00",
+    riskLevel: 65,
+    isRead: true,
+    category: "Movilidad"
+  }
+];
+
+export const EDUCATIONAL_RESOURCES = [
+  {
+    id: 1,
+    title: "Manejo Diario de la Diabetes Tipo 2",
+    description: "Guía completa para el control de la glucosa, alimentación adecuada y actividad física recomendada para pacientes con diabetes tipo 2.",
+    category: "Diabetes",
+    url: "/resources/diabetes-management.pdf",
+    publishedAt: "2023-11-05T00:00:00",
+    readTime: 15,
+    isRecommended: true
+  },
+  {
+    id: 2,
+    title: "Monitoreo de la Presión Arterial en Casa",
+    description: "Instrucciones detalladas sobre cómo medir correctamente la presión arterial en el hogar y llevar un registro para compartir con su médico.",
+    category: "Hipertensión",
+    url: "/resources/blood-pressure-monitoring.pdf",
+    publishedAt: "2023-10-20T00:00:00",
+    readTime: 10,
+    isRecommended: true
+  },
+  {
+    id: 3,
+    title: "Ejercicios Seguros para Personas con Artritis",
+    description: "Rutinas de ejercicios de bajo impacto diseñadas específicamente para personas con artritis, que ayudan a mantener la movilidad sin aumentar el dolor.",
+    category: "Artritis",
+    url: "/resources/arthritis-exercises.pdf",
+    publishedAt: "2023-09-15T00:00:00",
+    readTime: 20,
+    isRecommended: false
+  },
+  {
+    id: 4,
+    title: "Plan Alimenticio para Pacientes con Hipertensión",
+    description: "Dieta DASH y recomendaciones nutricionales para reducir la presión arterial naturalmente a través de una alimentación balanceada y baja en sodio.",
+    category: "Hipertensión",
+    url: "/resources/dash-diet.pdf",
+    publishedAt: "2023-11-10T00:00:00",
+    readTime: 25,
+    isRecommended: false
+  },
+  {
+    id: 5,
+    title: "Control de Glucosa Post-Prandial",
+    description: "Estrategias para gestionar los niveles de glucosa después de las comidas, incluyendo selección de alimentos y tiempo de medicación.",
+    category: "Diabetes",
+    url: "/resources/post-meal-glucose.pdf",
+    publishedAt: "2023-11-28T00:00:00",
+    readTime: 12,
+    isRecommended: true
+  },
+  {
+    id: 6,
+    title: "Nutrición Adecuada para la Salud Ósea",
+    description: "Alimentos ricos en calcio, vitamina D y otros nutrientes esenciales para fortalecer los huesos y prevenir fracturas en pacientes con osteoporosis.",
+    category: "Osteoporosis",
+    url: "/resources/bone-health-nutrition.pdf",
+    publishedAt: "2023-10-05T00:00:00",
+    readTime: 18,
+    isRecommended: false
+  },
+  {
+    id: 7,
+    title: "Viviendo con EPOC: Guía para Pacientes",
+    description: "Información completa sobre cómo manejar los síntomas de la EPOC, técnicas de respiración y consejos para adaptarse a las actividades diarias.",
+    category: "Respiratoria",
+    url: "/resources/living-with-copd.pdf",
+    publishedAt: "2023-09-28T00:00:00",
+    readTime: 30,
+    isRecommended: true
   }
 ];

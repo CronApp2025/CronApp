@@ -1,45 +1,61 @@
-
-import React from "react";
-import { Header } from "./Header";
-import { Sidebar } from "./Sidebar";
-import { Footer } from "./Footer";
-import { MobileNavigation } from "./mobile-navigation";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/hooks/use-auth";
-import { LoadingScreen } from "@/components/ui/loading-screen";
+import { ReactNode } from 'react';
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+import { Footer } from './Footer';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  activePath: string;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, activePath }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
-  const { isLoading } = useAuth();
-
-  if (isLoading) {
-    return <LoadingScreen message="Cargando dashboard..." />;
-  }
-
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+  
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
-      <Header activePath={window.location.pathname} />
+      <Header 
+        activePath={activePath} 
+        toggleSidebar={toggleSidebar} 
+        sidebarOpen={sidebarOpen}
+      />
       
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {!isMobile && (
-          <div className="lg:w-64 bg-white border-r border-neutral-200">
-            <Sidebar className="sticky top-0 p-4" />
-          </div>
-        )}
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar 
+          className={`
+            transition-all duration-300 fixed lg:relative z-10 h-[calc(100vh-64px)] 
+            ${sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0'}
+          `}
+        />
         
-        <main className="flex-1 p-4 lg:p-6">
-          <div className="max-w-7xl mx-auto">
+        <main 
+          className={`
+            flex-1 overflow-auto px-4 pb-4 transition-all duration-300
+            ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}
+          `}
+        >
+          {/* Sobra detrás del sidebar en móvil */}
+          {sidebarOpen && isMobile && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 z-0 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          
+          {/* Contenido principal */}
+          <div className="py-6">
             {children}
           </div>
         </main>
       </div>
       
       <Footer />
-      {isMobile && <MobileNavigation />}
     </div>
   );
 }

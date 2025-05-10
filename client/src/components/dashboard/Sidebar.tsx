@@ -1,82 +1,107 @@
+import {
+  Brain,
+  ChevronDown,
+  LineChart,
+  Plus,
+  Bot,
+  Settings,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { Home, Users, Activity, BarChart } from "lucide-react";
 
 interface SidebarProps {
   className?: string;
 }
 
 export function Sidebar({ className }: SidebarProps) {
+  const { user } = useAuth();
+  
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h3 className="text-xs text-neutral-500 font-medium uppercase tracking-wider pl-3">
-            Principal
-          </h3>
-          <div className="space-y-1">
-            <Link href="/">
-              <a className="flex items-center gap-3 rounded-md px-3 py-2 text-neutral-900 hover:bg-neutral-100 font-medium">
-                <Home className="h-4 w-4" />
-                <span>Dashboard</span>
-              </a>
-            </Link>
-            <Link href="/pacientes">
-              <a className="flex items-center gap-3 rounded-md px-3 py-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900">
-                <Users className="h-4 w-4" />
-                <span>Pacientes</span>
-              </a>
-            </Link>
-            <Link href="/condiciones">
-              <a className="flex items-center gap-3 rounded-md px-3 py-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900">
-                <Activity className="h-4 w-4" />
-                <span>Condiciones</span>
-              </a>
-            </Link>
-            <Link href="/estadisticas">
-              <a className="flex items-center gap-3 rounded-md px-3 py-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900">
-                <BarChart className="h-4 w-4" />
-                <span>Estadísticas</span>
-              </a>
-            </Link>
-          </div>
+    <aside className={cn("lg:w-full bg-white rounded-lg shadow-sm p-6", className)}>
+      {/* Doctor Profile */}
+      <div className="flex flex-col items-center mb-6">
+        <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-300 to-blue-400 flex items-center justify-center mb-4">
+          <span className="text-white text-lg font-medium">
+            {user?.nombre?.charAt(0) || "M"}
+          </span>
         </div>
+        <h2 className="text-lg font-semibold text-neutral-800">
+          {user?.nombre || "Doctor"}
+        </h2>
+        <p className="text-sm text-neutral-500">
+          {user?.rol || "Especialista • Medicina"}
+        </p>
 
-        <div className="space-y-2">
-          <h3 className="text-xs text-neutral-500 font-medium uppercase tracking-wider pl-3">
-            Recursos
-          </h3>
-          <div className="space-y-1">
-            <Link href="#">
-              <a className="flex items-center gap-3 rounded-md px-3 py-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <span>Artículos médicos</span>
-              </a>
-            </Link>
-            <Link href="#">
-              <a className="flex items-center gap-3 rounded-md px-3 py-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <span>Guías clínicas</span>
-              </a>
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-blue-50 rounded-lg p-4">
-          <h4 className="font-medium text-blue-700 mb-2">¿Necesitas ayuda?</h4>
-          <p className="text-sm text-blue-600 mb-3">
-            Consulta nuestra documentación o contacta a soporte.
-          </p>
-          <Link href="#">
-            <a className="text-sm font-medium text-blue-700 hover:text-blue-800 hover:underline">
-              Ver recursos de ayuda →
-            </a>
-          </Link>
+        <div className="flex items-center mt-2 text-xs text-neutral-500">
+          <span className="w-2 h-2 bg-[#4caf50] rounded-full mr-1"></span>
+          <span>Online</span>
+          <span className="mx-2">•</span>
+          <span>Acceso Médico</span>
         </div>
       </div>
-    </div>
+
+      {/* System Status */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-medium text-neutral-500">ESTADO DEL SISTEMA</h3>
+          <span className="text-xs text-[#4caf50]">ÓPTIMO</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-neutral-50 rounded-md p-3 text-center">
+            <div className="text-xl font-semibold text-neutral-800">24</div>
+            <div className="text-xs text-neutral-500">Pacientes Activos</div>
+          </div>
+          <div className="bg-neutral-50 rounded-md p-3 text-center">
+            <div className="text-xl font-semibold text-[#ff9800]">3</div>
+            <div className="text-xs text-neutral-500">Alertas Críticas</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Wings */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-medium text-neutral-500">Data Wings</h3>
+          <Button variant="outline" size="sm" className="text-xs text-primary border-primary-200 rounded h-7 px-2 py-1">
+            <span>Expandir</span>
+            <ChevronDown className="ml-1 h-3 w-3" />
+          </Button>
+        </div>
+
+        <div className="bg-neutral-50 rounded-md p-3">
+          <p className="text-sm text-neutral-600">
+            Despliegue de wings para acceso de emergencia a datos vitales del paciente y herramientas quirúrgicas
+          </p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        <Button className="w-full py-3 bg-primary hover:bg-primary-600 text-white rounded-md flex items-center justify-center">
+          <Plus className="mr-2 h-4 w-4" />
+          <span>Nuevo Paciente</span>
+        </Button>
+
+        <Button variant="outline" className="w-full py-3 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-md flex items-center justify-center">
+          <LineChart className="mr-2 h-4 w-4" />
+          <span>Análisis de Tratamiento</span>
+        </Button>
+
+        <Button variant="outline" className="w-full py-3 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-md flex items-center justify-center">
+          <Bot className="mr-2 h-4 w-4" />
+          <span>Asistente de Diagnóstico IA</span>
+        </Button>
+        
+        <Link href="/settings">
+          <Button variant="outline" className="w-full py-3 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-md flex items-center justify-center">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Configuración</span>
+          </Button>
+        </Link>
+      </div>
+    </aside>
   );
 }

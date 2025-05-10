@@ -352,7 +352,11 @@ def resetear_password(token):
                         return error_response("Token inválido", 400)
                 
                 # 4. Actualizar la contraseña
-                hashed_password = generate_password_hash(new_password)
+                # Usamos un método de hash consistente con lo que espera la función check_password_hash
+                hashed_password = generate_password_hash(new_password, method='scrypt')
+                
+                # Imprimir información de depuración sobre el hash generado
+                current_app.logger.info(f"Contraseña hasheada generada: {hashed_password[:20]}...")
                 
                 # Verificar que el user_id sea válido
                 user_id = token_data.get('user_id')
