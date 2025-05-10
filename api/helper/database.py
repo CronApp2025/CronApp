@@ -24,16 +24,24 @@ def get_db_cursor(dictionary=True):
         if conn and conn.is_connected():
             conn.close()
 
-def fetch_one_dict_from_result(result):
-    """Fetch one row from a MySQL result as dictionary"""
-    row = result.fetchone()
+def fetch_one_dict_from_result(cursor):
+    """Fetch one row from a MySQL cursor as dictionary"""
+    row = cursor.fetchone()
     if not row:
         return None
-    return dict(zip(result.column_names, row))
+    # Si ya es un diccionario, devolver directamente
+    if isinstance(row, dict):
+        return row
+    # Si no, convertirlo en un diccionario
+    return dict(zip(cursor.column_names, row))
 
-def fetch_all_dict_from_result(result):
-    """Fetch all rows from a MySQL result as list of dictionaries"""
-    rows = result.fetchall()
+def fetch_all_dict_from_result(cursor):
+    """Fetch all rows from a MySQL cursor as list of dictionaries"""
+    rows = cursor.fetchall()
     if not rows:
         return []
-    return [dict(zip(result.column_names, row)) for row in rows]
+    # Si ya son diccionarios, devolver directamente
+    if rows and isinstance(rows[0], dict):
+        return rows
+    # Si no, convertirlos en diccionarios
+    return [dict(zip(cursor.column_names, row)) for row in rows]
