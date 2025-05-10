@@ -188,81 +188,84 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
         <AuthProvider>
-          <div className="min-h-screen bg-background">
-            <Switch>
-              {/* Las rutas públicas */}
-              <Route path="/login" component={LoginPage} />
-              <Route path="/register" component={RegisterPage} />
-              <Route path="/forgot-password" component={ForgotPasswordPage} />
-              <Route path="/reset-password/:token">
-                {(params) => <ResetPasswordPage params={params} />}
-              </Route>
+          {({ isLoading }) => (
+            <div className="min-h-screen bg-background">
+              {isLoading && <LoadingScreen message="Cargando aplicación..." />}
+              <Switch>
+                {/* Las rutas públicas */}
+                <Route path="/login" component={LoginPage} />
+                <Route path="/register" component={RegisterPage} />
+                <Route path="/forgot-password" component={ForgotPasswordPage} />
+                <Route path="/reset-password/:token">
+                  {(params) => <ResetPasswordPage params={params} />}
+                </Route>
 
-              {/* Rutas que requieren autenticación */}
-              <Route path="/">
-                {() => {
-                  const { isAuthenticated } = useAuth();
-                  if (!isAuthenticated) {
-                    return <LoginPage />;
-                  }
-                  return <DashboardPage />;
-                }}
-              </Route>
-              <Route path="/dashboard">
-                {() => {
-                  const { isAuthenticated } = useAuth();
-                  if (!isAuthenticated) {
-                    return <LoginPage />;
-                  }
-                  return <DashboardPage />;
-                }}
-              </Route>
-              <Route path="/settings">
-                {() => {
-                  const { isAuthenticated } = useAuth();
-                  if (!isAuthenticated) {
-                    return <LoginPage />;
-                  }
-                  return (
-                    <DashboardLayout>
-                      <SettingsFormNew />
-                    </DashboardLayout>
-                  );
-                }}
-              </Route>
-              <Route path="/condiciones">
-                {() => {
-                  const { isAuthenticated } = useAuth();
-                  if (!isAuthenticated) {
-                    return <LoginPage />;
-                  }
-                  return <ConditionsPage />;
-                }}
-              </Route>
-              <Route path="/pacientes">
-                {() => {
-                  const { isAuthenticated } = useAuth();
-                  if (!isAuthenticated) {
-                    return <LoginPage />;
-                  }
-                  return <PatientsPage />;
-                }}
-              </Route>
-              <Route path="/estadisticas">
-                {() => {
-                  const { isAuthenticated } = useAuth();
-                  if (!isAuthenticated) {
-                    return <LoginPage />;
-                  }
-                  return <StatsPage />;
-                }}
-              </Route>
+                {/* Rutas que requieren autenticación */}
+                <Route path="/">
+                  {() => {
+                    const { isAuthenticated } = useAuth();
+                    if (!isAuthenticated) {
+                      return <LoginPage />;
+                    }
+                    return <DashboardPage />;
+                  }}
+                </Route>
+                <Route path="/dashboard">
+                  {() => {
+                    const { isAuthenticated } = useAuth();
+                    if (!isAuthenticated) {
+                      return <LoginPage />;
+                    }
+                    return <DashboardPage />;
+                  }}
+                </Route>
+                <Route path="/settings">
+                  {() => {
+                    const { isAuthenticated } = useAuth();
+                    if (!isAuthenticated) {
+                      return <LoginPage />;
+                    }
+                    return (
+                      <DashboardLayout>
+                        <SettingsFormNew />
+                      </DashboardLayout>
+                    );
+                  }}
+                </Route>
+                <Route path="/condiciones">
+                  {() => {
+                    const { isAuthenticated } = useAuth();
+                    if (!isAuthenticated) {
+                      return <LoginPage />;
+                    }
+                    return <ConditionsPage />;
+                  }}
+                </Route>
+                <Route path="/pacientes">
+                  {() => {
+                    const { isAuthenticated } = useAuth();
+                    if (!isAuthenticated) {
+                      return <LoginPage />;
+                    }
+                    return <PatientsPage />;
+                  }}
+                </Route>
+                <Route path="/estadisticas">
+                  {() => {
+                    const { isAuthenticated } = useAuth();
+                    if (!isAuthenticated) {
+                      return <LoginPage />;
+                    }
+                    return <StatsPage />;
+                  }}
+                </Route>
 
-              {/* Ruta para manejar 404s */}
-              <Route component={NotFound} />
-            </Switch>
-            <Toaster />
-          </div>
+                {/* Ruta para manejar 404s */}
+                <Route component={NotFound} />
+              </Switch>
+              <Toaster />
+            </div>
+          )}
         </AuthProvider>
       </GoogleOAuthProvider>
     </QueryClientProvider>
