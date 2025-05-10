@@ -26,9 +26,13 @@ def solicitar_recuperacion():
                     return error_response("El email no está registrado", 404)
                 
                 # 2. Generar token
+                # Asegurar que usamos exactamente el mismo salt al crear y validar
+                salt_value = current_app.config.get('SECURITY_PASSWORD_SALT', 'password-reset-salt')
+                current_app.logger.info(f"SECURITY_PASSWORD_SALT usado para generar token: {salt_value}")
+                
                 serializer = Serializer(
                     secret_key=current_app.config['SECRET_KEY'],
-                    salt=current_app.config['SECURITY_PASSWORD_SALT']
+                    salt=salt_value
                 )
                 token = serializer.dumps(email)
                 current_app.logger.info(f"Token generado para {email}: {token}")
@@ -219,9 +223,12 @@ def resetear_password(token):
             return error_response("La contraseña debe tener al menos 8 caracteres", 400)
         
         # 2. Verificar el token
+        salt_value = current_app.config.get('SECURITY_PASSWORD_SALT', 'password-reset-salt')
+        current_app.logger.info(f"SECURITY_PASSWORD_SALT usado para verificar token: {salt_value}")
+        
         serializer = Serializer(
             current_app.config['SECRET_KEY'],
-            salt=current_app.config.get('SECURITY_PASSWORD_SALT', 'password-reset-salt')
+            salt=salt_value
         )
         
         try:
