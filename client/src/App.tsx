@@ -14,11 +14,13 @@ import { LoginForm } from "@/components/auth/login-form";
 import { RegisterForm } from "@/components/auth/register-form";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { PatientProfile } from "@/components/dashboard/PatientProfile";
-import { RiskMonitoring } from "@/components/dashboard/RiskMonitoring";
-import { ConditionManagement } from "@/components/dashboard/ConditionManagement";
-import { ClinicalEducation } from "@/components/dashboard/ClinicalEducation";
+import { Sidebar } from "@/components/ui/sidebar";
+import { PatientOverview } from "@/components/dashboard/patient-overview";
+import { RiskMonitoring } from "@/components/dashboard/risk-monitoring";
+import { EducationSection } from "@/components/dashboard/education-section";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { Footer } from "@/components/dashboard/Footer";
+import { MobileNavigation } from "@/components/dashboard/mobile-navigation";
 
 // Route components
 const LoginPage = () => (
@@ -53,23 +55,89 @@ const ResetPasswordPage = ({ params }: { params: { token: string } }) => (
   </div>
 );
 
-const DashboardPage = () => (
-  <DashboardLayout>
-    <div className="space-y-6">
-      <PatientProfile />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <RiskMonitoring />
-        <ClinicalEducation />
-      </div>
-    </div>
-  </DashboardLayout>
-);
+const DashboardPage = () => {
+  const isMobile = useMobile();
+  const { user } = useAuth();
+  
+  const mockPatient = {
+    nombre: "Juan",
+    apellido: "Pérez",
+    edad: 45,
+    genero: "Masculino",
+    conditions: [
+      { name: "Diabetes Tipo 2", diagnosed_date: "2023-01-15" },
+      { name: "Hipertensión", diagnosed_date: "2023-02-20" }
+    ]
+  };
 
-const ConditionsPage = () => (
-  <DashboardLayout>
-    <ConditionManagement />
-  </DashboardLayout>
-);
+  const mockRiskAlerts = [
+    {
+      id: 1,
+      patientId: "001",
+      description: "Nivel de glucosa elevado",
+      days: 3,
+      level: 85
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
+      <DashboardHeader />
+      <div className="flex-1 flex flex-col lg:flex-row">
+        {!isMobile && (
+          <div className="lg:w-64 bg-white border-r border-neutral-200">
+            <Sidebar className="sticky top-0 p-4" />
+          </div>
+        )}
+        <main className="flex-1 p-4 lg:p-6">
+          <div className="max-w-7xl mx-auto">
+            <PatientOverview 
+              patient={mockPatient}
+              doctorName={`Dr. ${user?.nombre || 'Usuario'}`}
+              doctorInitials={user?.nombre?.charAt(0) || 'U'}
+              doctorSpecialty="Médico General"
+              systemStatus={{ label: "Óptimo", value: 85 }}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <RiskMonitoring riskAlerts={mockRiskAlerts} />
+              <EducationSection />
+            </div>
+          </div>
+        </main>
+      </div>
+      <Footer />
+      {isMobile && <MobileNavigation />}
+    </div>
+  );
+};
+
+const ConditionsPage = () => {
+  const isMobile = useMobile();
+  return (
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
+      <DashboardHeader />
+      <div className="flex-1 flex flex-col lg:flex-row">
+        {!isMobile && (
+          <div className="lg:w-64 bg-white border-r border-neutral-200">
+            <Sidebar className="sticky top-0 p-4" />
+          </div>
+        )}
+        <main className="flex-1 p-4 lg:p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold text-neutral-800 mb-4">Gestión de Condiciones</h2>
+              <p className="text-neutral-600">
+                Esta sección está en desarrollo. Próximamente podrás gestionar las condiciones médicas.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+      <Footer />
+      {isMobile && <MobileNavigation />}
+    </div>
+  );
+};
 
 const PatientsPage = () => (
   <DashboardLayout>
